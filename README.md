@@ -27,6 +27,9 @@
     <a href='https://zenodo_client.readthedocs.io/en/latest/?badge=latest'>
         <img src='https://readthedocs.org/projects/zenodo_client/badge/?version=latest' alt='Documentation Status' />
     </a>
+    <a href="https://zenodo.org/badge/latestdoi/343513445">
+        <img src="https://zenodo.org/badge/343513445.svg" alt="DOI">
+    </a>
 </p>
 
 A wrapper for the Zenodo API.
