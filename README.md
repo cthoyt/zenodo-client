@@ -66,14 +66,12 @@ It can be run with `zenodo_client <deposition ID> <path 1> ... <path N>`
 
 ## ⬇️ Installation
 
-<!-- Uncomment this section after your first ``tox -e finish``
 The most recent release can be installed from
 [PyPI](https://pypi.org/project/zenodo_client/) with:
 
 ```bash
 $ pip install zenodo_client
 ```
--->
 
 The most recent code and data can be installed directly from GitHub with:
 
