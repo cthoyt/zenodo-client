@@ -16,6 +16,9 @@ later, but that will cause problems--the code will get executed twice:
 import logging
 
 import click
+from more_click import verbose_option
+
+from .api import update_zenodo
 
 __all__ = ['main']
 
@@ -23,9 +26,13 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
+@click.argument('deposition')
+@click.argument('paths', nargs=-1)
+@verbose_option
 @click.version_option()
-def main():
-    """CLI for zenodo_client."""
+def main(deposition, paths):
+    """CLI for Zenodo Client."""
+    update_zenodo(deposition, paths)
 
 
 if __name__ == '__main__':
