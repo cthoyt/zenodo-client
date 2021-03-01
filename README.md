@@ -33,8 +33,25 @@ A wrapper for the Zenodo API.
 
 ## 💪 Getting Started
 
-> TODO show in a very small amount of space the **MOST** useful thing your package can do.
-Make it as short as possible! You have an entire set of docs for later.
+The following example shows how to use the Zenodo uploader
+
+```python
+from zenodo_client import update_zenodo
+
+# The ID from your deposition
+SANDBOX_DEP_ID = '724868'
+
+# Paths to local files. Good to use in combination with resources that are always
+#  dumped to the same place by a given script
+paths = [
+   # os.path.join(DATABASE_DIRECTORY, 'alts_sample.tsv')
+   '/Users/cthoyt/Desktop/alts_sample.tsv'
+]
+
+# Don't forget to set the ZENODO_API_TOKEN environment variable or
+#  any valid way to get zenodo/api_token from PyStow.
+update_zenodo(SANDBOX_DEP_ID, paths)
+```
 
 ### Command Line Interface
 
@@ -45,8 +62,7 @@ be used from the shell with the `--help` flag to show all subcommands:
 $ zenodo_client --help
 ```
 
-> TODO show the most useful thing the CLI does! The CLI will have document auto-generated
-by sphinx.
+It can be run with `zenodo_client <deposition ID> <path 1> ... <path N>`
 
 ## ⬇️ Installation
 
