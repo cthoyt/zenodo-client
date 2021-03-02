@@ -36,6 +36,47 @@ A wrapper for the Zenodo API.
 
 ## 💪 Getting Started
 
+The first example shows how you can set some configuration then never worry about whether it's been
+uploaded already or not - all baked in with PyStow. On the first time this script is run, the new
+deposition is made, published, and the identifier is stored with the given key in your
+`~/.config/zenodo.ini`. Next time it's run, the deposition will be looked up, and the data will be
+uploaded. Versioning is given automatically by date, and if multiple versions are uploaded on one
+day, then a dash and the revision are appended.
+
+```python
+from zenodo_client import Creator, Metadata, ensure_zenodo
+
+
+def main():
+    # Define the metadata that will be used on initial upload
+    data = Metadata(
+        title='Test Upload 3',
+        upload_type='dataset',
+        description='test description',
+        creators=[
+            Creator(
+                name='Hoyt, Charles Tapley',
+                affiliation='Harvard Medical School',
+                orcid='0000-0003-4423-4370',
+            ),
+        ],
+    )
+    res = ensure_zenodo(
+        key='test3',
+        data=data,
+        paths='/Users/cthoyt/Desktop/test1.png',
+        sandbox=True,
+    )
+    from pprint import pprint
+    pprint(res.json())
+
+
+if __name__ == '__main__':
+    main()
+
+
+```
+
 The following example shows how to use the Zenodo uploader
 
 ```python

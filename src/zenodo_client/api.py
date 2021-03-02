@@ -6,22 +6,46 @@ import datetime
 import logging
 import os
 import time
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional, Union
 
 import pystow
 import requests
 
+from .struct import Metadata
+
 __all__ = [
+    'ensure_zenodo',
     'update_zenodo',
+    'create_zenodo',
     'Zenodo',
 ]
 
 logger = logging.getLogger(__name__)
 
+Data = Union[Mapping[str, Any], Metadata]
 
-def update_zenodo(deposition_id: str, paths: Iterable[str]) -> requests.Response:
+
+def ensure_zenodo(key: str, data: Data, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
+    """Create a Zenodo record if it doesn't exist, or update one that does."""
+    deposition_id = pystow.get_config('zenodo', key)
+    if deposition_id is not None:
+        return update_zenodo(deposition_id, paths, **kwargs)
+
+    res = create_zenodo(data, paths, **kwargs)
+    # Write the ID to the key in the local configuration
+    # so it doesn't need to be created from scratch next time
+    pystow.write_config('zenodo', key, str(res.json()['id']))
+    return res
+
+
+def create_zenodo(data: Data, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
+    """Create a Zenodo record."""
+    return Zenodo(**kwargs).create(data, paths)
+
+
+def update_zenodo(deposition_id: str, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
     """Update a Zenodo record."""
-    return Zenodo().update(deposition_id, paths)
+    return Zenodo(**kwargs).update(deposition_id, paths)
 
 
 class Zenodo:
@@ -44,13 +68,23 @@ class Zenodo:
 
         self.access_token = access_token or pystow.get_config('zenodo', self.token_key)
 
-    def create(self, data: Mapping[str, Any], paths: Iterable[str]) -> requests.Response:
+    def create(self, data: Data, paths: Union[str, Iterable[str]]) -> requests.Response:
         """Create a record.
 
         :param data: The JSON data to send to the new data
         :param paths: Paths to local files to upload
         :return: The response JSON from the Zenodo API
+        :raises ValueError: if the response is missing a "bucket"
         """
+        if isinstance(data, Metadata):
+            data = {
+                'metadata': {
+                    key: value
+                    for key, value in data.to_dict().items()
+                    if value
+                },
+            }
+
         res = requests.post(
             self.base,
             json=data,
@@ -59,7 +93,11 @@ class Zenodo:
         res.raise_for_status()
 
         res_json = res.json()
-        self._upload_files(bucket=res_json['bucket'], paths=paths)
+        bucket = res_json.get('links', {}).get('bucket')
+        if bucket is None:
+            raise ValueError(f'No bucket in response. Got: {res_json}')
+
+        self._upload_files(bucket=bucket, paths=paths)
         return self.publish(res_json['id'])
 
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
@@ -79,7 +117,7 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, paths: Iterable[str]) -> requests.Response:
+    def update(self, deposition_id: str, paths: Union[str, Iterable[str]]) -> requests.Response:
         """Create a new version of the given record with the given files."""
         # Prepare a new version based on the old version
         # see: https://developers.zenodo.org/#new-version)
@@ -122,7 +160,9 @@ class Zenodo:
         # Send the publish command
         return self.publish(new_deposition_id)
 
-    def _upload_files(self, *, bucket: str, paths: Iterable[str]):
+    def _upload_files(self, *, bucket: str, paths: Union[str, Iterable[str]]):
+        if isinstance(paths, str):
+            paths = [paths]
         # see https://developers.zenodo.org/#quickstart-upload
         for path in paths:
             with open(path, "rb") as file:
