@@ -60,11 +60,14 @@ class Zenodo:
         """
         self.sandbox = sandbox
         if self.sandbox:
-            self.base = 'https://sandbox.zenodo.org/api/deposit/depositions'
+            self.base = 'https://sandbox.zenodo.org/api'
             self.token_key = 'sandbox_api_token'
         else:
-            self.base = 'https://zenodo.org/api/deposit/depositions'
+            self.base = 'https://zenodo.org/api'
             self.token_key = 'api_token'
+
+        # Base URL for depositions, relative to the API base
+        self.depositions_base = self.base + '/deposit/depositions'
 
         self.access_token = access_token or pystow.get_config('zenodo', self.token_key)
 
@@ -86,7 +89,7 @@ class Zenodo:
             }
 
         res = requests.post(
-            self.base,
+            self.depositions_base,
             json=data,
             params={'access_token': self.access_token},
         )
@@ -111,7 +114,7 @@ class Zenodo:
         if sleep:
             time.sleep(1)
         res = requests.post(
-            f'{self.base}/{deposition_id}/actions/publish',
+            f'{self.depositions_base}/{deposition_id}/actions/publish',
             params={'access_token': self.access_token},
         )
         res.raise_for_status()
@@ -122,7 +125,7 @@ class Zenodo:
         # Prepare a new version based on the old version
         # see: https://developers.zenodo.org/#new-version)
         res = requests.post(
-            f'{self.base}/{deposition_id}/actions/newversion',
+            f'{self.depositions_base}/{deposition_id}/actions/newversion',
             params={'access_token': self.access_token},
         )
         res.raise_for_status()
@@ -133,7 +136,7 @@ class Zenodo:
         # Get all metadata associated with the new version (this has updated DOIs, etc.)
         # see: https://developers.zenodo.org/#retrieve
         res = requests.get(
-            f'{self.base}/{new_deposition_id}',
+            f'{self.depositions_base}/{new_deposition_id}',
             params={'access_token': self.access_token},
         )
         res.raise_for_status()
@@ -145,7 +148,7 @@ class Zenodo:
         # Update the deposition for the new version
         # see: https://developers.zenodo.org/#update
         res = requests.put(
-            f'{self.base}/{new_deposition_id}',
+            f'{self.depositions_base}/{new_deposition_id}',
             json=new_deposition_data,
             params={'access_token': self.access_token},
         )
