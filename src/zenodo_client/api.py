@@ -176,6 +176,22 @@ class Zenodo:
                 )
             res.raise_for_status()
 
+    def get_record(self, record_id: Union[int, str]) -> requests.Response:
+        """Get the metadata for a given record."""
+        res = requests.get(
+            f'{self.base}/records/{record_id}',
+            params={'access_token': self.access_token},
+        )
+        res.raise_for_status()
+        return res
+
+    def get_latest_record(self, record_id: Union[int, str]) -> str:
+        """Get the latest record related to the given record."""
+        res_json = self.get_record(record_id).json()
+        # Still works even in the case that the given record ID is the latest.
+        latest = res_json['links']['latest'].split('/')[-1]
+        return latest
+
 
 def _prepare_new_version(old_version: str) -> str:
     new_version = datetime.datetime.today().strftime('%Y-%m-%d')
