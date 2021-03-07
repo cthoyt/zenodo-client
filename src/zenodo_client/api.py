@@ -6,6 +6,7 @@ import datetime
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Union
 
 import pystow
@@ -191,6 +192,35 @@ class Zenodo:
         # Still works even in the case that the given record ID is the latest.
         latest = res_json['links']['latest'].split('/')[-1]
         return latest
+
+    def download(self, record_id: Union[int, str], path: str) -> Path:
+        """Download the file for the given record.
+
+        For example, to download the most recent version of NSoC-KG, you can
+        use the following command:
+
+        >>> path = Zenodo().download('4574555', 'triples.tsv')
+
+        Even as new versions of the data are uploaded, this command will always
+        be able to check if a new version is available, download it if it is, and
+        return the local file path. If the most recent version is already downloaded,
+        then it returns the local file path to the cached file.
+
+        The file path uses :mod:`pystow` under the ``zenodo`` module and uses the
+        "concept record ID" as a submodule since that is the consistent identifier
+        between different records that are versions of the same data.
+        """
+        res_json = self.get_record(record_id).json()
+        # conceptrecid is the consistent record ID for all versions of the same record
+        concept_record_id = res_json['conceptrecid']
+        version = res_json['metadata']['version']
+        url = f'{self.base}/record/{record_id}/files/{path}'
+        return pystow.ensure('zenodo', concept_record_id, version, path, url=url)
+
+    def download_latest(self, record_id: Union[int, str], path: str) -> Path:
+        """Download the latest version of the file."""
+        latest_record_id = self.get_latest_record(record_id)
+        return self.download(latest_record_id, path)
 
 
 def _prepare_new_version(old_version: str) -> str:
