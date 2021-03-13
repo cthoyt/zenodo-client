@@ -7,7 +7,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, Mapping, Optional, Sequence, Union
 
 import pystow
 import requests
@@ -24,6 +24,9 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 Data = Union[Mapping[str, Any], Metadata]
+
+PartsFunc = Callable[[str, str, str], Sequence[str]]
+PartsHint = Union[None, Sequence[str], PartsFunc]
 
 
 def ensure_zenodo(key: str, data: Data, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
@@ -191,16 +194,20 @@ class Zenodo:
         res_json = self.get_record(record_id).json()
         # Still works even in the case that the given record ID is the latest.
         latest = res_json['links']['latest'].split('/')[-1]
+        logger.debug('latest for zenodo.record:%s is zenodo.record:%s', record_id, latest)
         return latest
 
-    def download(self, record_id: Union[int, str], path: str, *, parts: Optional[Sequence[str]] = None) -> Path:
+    def download(self, record_id: Union[int, str], path: str, *, force: bool = False, parts: PartsHint = None) -> Path:
         """Download the file for the given record.
 
         :param record_id: The Zenodo record id
         :param path: The name of the file in the Zenodo record
         :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
             ``<PYSTOW_HOME>/zendoo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
-            consistent concept record ID for all versions of the same record.
+            consistent concept record ID for all versions of the same record. If a function is given, the function
+            should take 3 position arguments: concept record id, record id, and version, then return a sequence for
+            PyStow. The name of the file is automatically appended to the end of the sequence.
+        :param force: Should the file be re-downloaded if it already is cached? Defaults to false.
         :returns: the path to the downloaded file.
 
         For example, to download the most recent version of NSoC-KG, you can
@@ -221,16 +228,26 @@ class Zenodo:
         # conceptrecid is the consistent record ID for all versions of the same record
         concept_record_id = res_json['conceptrecid']
         version = res_json['metadata']['version']
+        logger.debug('version for zenodo.record:%s is %s', record_id, version)
         url = f'{self.base}/record/{record_id}/files/{path}'
 
         if parts is None:
             parts = ['zenodo', concept_record_id, version, path]
-        return pystow.ensure(*parts, url=url)
+        elif callable(parts):
+            parts = parts(concept_record_id, str(record_id), version)
+        return pystow.ensure(*parts, url=url, force=force)
 
-    def download_latest(self, record_id: Union[int, str], path: str, *, parts: Optional[Sequence[str]] = None) -> Path:
+    def download_latest(
+        self,
+        record_id: Union[int, str],
+        path: str,
+        *,
+        force: bool = False,
+        parts: PartsHint = None,
+    ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
-        return self.download(latest_record_id, path, parts=parts)
+        return self.download(latest_record_id, path, force=force, parts=parts)
 
 
 def _prepare_new_version(old_version: str) -> str:
