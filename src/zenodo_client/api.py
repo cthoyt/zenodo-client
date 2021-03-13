@@ -7,7 +7,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
 import pystow
 import requests
@@ -193,8 +193,15 @@ class Zenodo:
         latest = res_json['links']['latest'].split('/')[-1]
         return latest
 
-    def download(self, record_id: Union[int, str], path: str) -> Path:
+    def download(self, record_id: Union[int, str], path: str, *, parts: Optional[Sequence[str]] = None) -> Path:
         """Download the file for the given record.
+
+        :param record_id: The Zenodo record id
+        :param path: The name of the file in the Zenodo record
+        :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
+            ``<PYSTOW_HOME>/zendoo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
+            consistent concept record ID for all versions of the same record.
+        :returns: the path to the downloaded file.
 
         For example, to download the most recent version of NSoC-KG, you can
         use the following command:
@@ -215,12 +222,15 @@ class Zenodo:
         concept_record_id = res_json['conceptrecid']
         version = res_json['metadata']['version']
         url = f'{self.base}/record/{record_id}/files/{path}'
-        return pystow.ensure('zenodo', concept_record_id, version, path, url=url)
 
-    def download_latest(self, record_id: Union[int, str], path: str) -> Path:
+        if parts is None:
+            parts = ['zenodo', concept_record_id, version, path]
+        return pystow.ensure(*parts, url=url)
+
+    def download_latest(self, record_id: Union[int, str], path: str, *, parts: Optional[Sequence[str]] = None) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
-        return self.download(latest_record_id, path)
+        return self.download(latest_record_id, path, parts=parts)
 
 
 def _prepare_new_version(old_version: str) -> str:
