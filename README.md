@@ -37,47 +37,43 @@ A wrapper for the Zenodo API.
 ## 💪 Getting Started
 
 The first example shows how you can set some configuration then never worry about whether it's been
-uploaded already or not - all baked in with PyStow. On the first time this script is run, the new
-deposition is made, published, and the identifier is stored with the given key in your
-`~/.config/zenodo.ini`. Next time it's run, the deposition will be looked up, and the data will be
-uploaded. Versioning is given automatically by date, and if multiple versions are uploaded on one
-day, then a dash and the revision are appended.
+uploaded already or not - all baked in with [`pystow`](https://github.com/cthoyt/pystow). On the
+first time this script is run, the new deposition is made, published, and the identifier is stored
+with the given key in your `~/.config/zenodo.ini`. Next time it's run, the deposition will be looked
+up, and the data will be uploaded. Versioning is given automatically by date, and if multiple
+versions are uploaded on one day, then a dash and the revision are appended.
 
 ```python
 from zenodo_client import Creator, Metadata, ensure_zenodo
 
+# Define the metadata that will be used on initial upload
+data = Metadata(
+    title='Test Upload 3',
+    upload_type='dataset',
+    description='test description',
+    creators=[
+        Creator(
+            name='Hoyt, Charles Tapley',
+            affiliation='Harvard Medical School',
+            orcid='0000-0003-4423-4370',
+        ),
+    ],
+)
+res = ensure_zenodo(
+    key='test3',
+    data=data,
+    paths='/Users/cthoyt/Desktop/test1.png',
+    sandbox=True,
+)
+from pprint import pprint
 
-def main():
-    # Define the metadata that will be used on initial upload
-    data = Metadata(
-        title='Test Upload 3',
-        upload_type='dataset',
-        description='test description',
-        creators=[
-            Creator(
-                name='Hoyt, Charles Tapley',
-                affiliation='Harvard Medical School',
-                orcid='0000-0003-4423-4370',
-            ),
-        ],
-    )
-    res = ensure_zenodo(
-        key='test3',
-        data=data,
-        paths='/Users/cthoyt/Desktop/test1.png',
-        sandbox=True,
-    )
-    from pprint import pprint
-    pprint(res.json())
-
-
-if __name__ == '__main__':
-    main()
-
-
+pprint(res.json())
 ```
 
-The following example shows how to use the Zenodo uploader
+A real-world example can be found here: https://github.com/cthoyt/nsockg.
+
+The following example shows how to use the Zenodo uploader if you already know what your deposition
+identifier is.
 
 ```python
 from zenodo_client import update_zenodo
@@ -86,21 +82,47 @@ from zenodo_client import update_zenodo
 SANDBOX_DEP_ID = '724868'
 
 # Paths to local files. Good to use in combination with resources that are always
-#  dumped to the same place by a given script
+# dumped to the same place by a given script
 paths = [
-   # os.path.join(DATABASE_DIRECTORY, 'alts_sample.tsv')
-   '/Users/cthoyt/Desktop/alts_sample.tsv'
+    # os.path.join(DATABASE_DIRECTORY, 'alts_sample.tsv')
+    '/Users/cthoyt/Desktop/alts_sample.tsv'
 ]
 
 # Don't forget to set the ZENODO_API_TOKEN environment variable or
-#  any valid way to get zenodo/api_token from PyStow.
+# any valid way to get zenodo/api_token from PyStow.
 update_zenodo(SANDBOX_DEP_ID, paths)
 ```
 
+The following example shows how to look up the latest version of a record.
+
+```python
+from zenodo_client import Zenodo
+
+zenodo = Zenodo()
+OOH_NA_NA_RECORD = '4020486'
+new_record = zenodo.get_latest_record(OOH_NA_NA_RECORD)
+```
+
+Even further, the latest version of `names.tsv.gz` can be automatically downloaded to the
+`~/.data/zenodo/<conceptrecid>/<version>/<path>` via `pystow` with:
+
+```python
+from zenodo_client import Zenodo
+
+zenodo = Zenodo()
+OOH_NA_NA_RECORD = '4020486'
+new_record = zenodo.download_latest(OOH_NA_NA_RECORD, 'names.tsv.gz')
+```
+
+A real-world example can be found [here](https://github.com/pyobo/pyobo/blob/master/src/pyobo/resource_utils.py)
+where the latest build of the [Ooh Na Na](https://cthoyt.com/2020/04/18/ooh-na-na.html) nomenclature
+database is automatically downloaded from Zenodo, even though the PyOBO package only hardcodes the
+first deposition ID.
+
 ### Command Line Interface
 
-The zenodo_client command line tool is automatically installed. It can
-be used from the shell with the `--help` flag to show all subcommands:
+The zenodo_client command line tool is automatically installed. It can be used from the shell with
+the `--help` flag to show all subcommands:
 
 ```shell
 $ zenodo_client --help
@@ -136,14 +158,16 @@ $ pip install -e .
 The code in this package is licensed under the MIT License.
 
 ## 🙏 Contributing
+
 Contributions, whether filing an issue, making a pull request, or forking, are appreciated. See
-[CONTRIBUTING.rst](https://github.com/cthoyt/zenodo-client/blob/master/CONTRIBUTING.rst) for more information on getting
-involved.
+[CONTRIBUTING.rst](https://github.com/cthoyt/zenodo-client/blob/master/CONTRIBUTING.rst) for more
+information on getting involved.
 
 ## 🍪 Cookiecutter Acknowledgement
 
 This package was created with [@audreyr](https://github.com/audreyr)'s
-[cookiecutter](https://github.com/cookiecutter/cookiecutter) package using [@cthoyt](https://github.com/cthoyt)'s
+[cookiecutter](https://github.com/cookiecutter/cookiecutter) package
+using [@cthoyt](https://github.com/cthoyt)'s
 [cookiecutter-python-package](https://github.com/cthoyt/cookiecutter-python-package) template.
 
 ## 🛠️ Development
@@ -152,20 +176,21 @@ The final section of the README is for if you want to get involved by making a c
 
 ### ❓ Testing
 
-After cloning the repository and installing `tox` with `pip install tox`, the unit tests in the `tests/` folder can be
-run reproducibly with:
+After cloning the repository and installing `tox` with `pip install tox`, the unit tests in
+the `tests/` folder can be run reproducibly with:
 
 ```shell
 $ tox
 ```
 
-Additionally, these tests are automatically re-run with each commit in a [GitHub Action](https://github.com/cthoyt/zenodo-client/actions?query=workflow%3ATests).
+Additionally, these tests are automatically re-run with each commit in
+a [GitHub Action](https://github.com/cthoyt/zenodo-client/actions?query=workflow%3ATests).
 
 ### 📦 Making a Release
 
 After installing the package in development mode and installing
-`tox` with `pip install tox`, the commands for making a new release are contained within the `finish` environment
-in `tox.ini`. Run the following from the shell:
+`tox` with `pip install tox`, the commands for making a new release are contained within
+the `finish` environment in `tox.ini`. Run the following from the shell:
 
 ```shell
 $ tox -e finish
@@ -176,8 +201,8 @@ This script does the following:
 1. Uses BumpVersion to switch the version number in the `setup.cfg` and
    `src/zenodo_client/version.py` to not have the `-dev` suffix
 2. Packages the code in both a tar archive and a wheel
-3. Uploads to PyPI using `twine`. Be sure to have a `.pypirc` file configured to avoid the need for manual input at this
-   step
+3. Uploads to PyPI using `twine`. Be sure to have a `.pypirc` file configured to avoid the need for
+   manual input at this step
 4. Push to GitHub. You'll need to make a release going with the commit where the version was bumped.
-5. Bump the version to the next patch. If you made big changes and want to bump the version by minor, you can
-   use `tox -e bumpversion minor` after.
+5. Bump the version to the next patch. If you made big changes and want to bump the version by
+   minor, you can use `tox -e bumpversion minor` after.
