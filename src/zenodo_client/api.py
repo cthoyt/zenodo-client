@@ -229,7 +229,13 @@ class Zenodo:
         concept_record_id = res_json['conceptrecid']
         version = res_json['metadata']['version']
         logger.debug('version for zenodo.record:%s is %s', record_id, version)
-        url = f'{self.base}/record/{record_id}/files/{path}'
+
+        for file in res_json['files']:
+            if file['key'] == path:
+                url = file['links']['self']
+                break
+        else:
+            raise FileNotFoundError(f'zenodo.record:{record_id} does not have a file with key {path}')
 
         if parts is None:
             parts = ['zenodo', concept_record_id, version, path]
