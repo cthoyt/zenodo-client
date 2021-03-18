@@ -18,6 +18,8 @@ __all__ = [
     'ensure_zenodo',
     'update_zenodo',
     'create_zenodo',
+    'download_zenodo',
+    'download_zenodo_latest',
     'Zenodo',
 ]
 
@@ -50,6 +52,16 @@ def create_zenodo(data: Data, paths: Union[str, Iterable[str]], **kwargs) -> req
 def update_zenodo(deposition_id: str, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
     """Update a Zenodo record."""
     return Zenodo(**kwargs).update(deposition_id, paths)
+
+
+def download_zenodo(deposition_id: str, path: str, force: bool = False, **kwargs):
+    """Download a Zenodo record."""
+    return Zenodo(**kwargs).download(deposition_id, path=path, force=force)
+
+
+def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs):
+    """Download the latest Zenodo record."""
+    return Zenodo(**kwargs).download_latest(deposition_id, path=path, force=force)
 
 
 class Zenodo:
