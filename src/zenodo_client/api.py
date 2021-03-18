@@ -76,14 +76,17 @@ class Zenodo:
         """
         self.sandbox = sandbox
         if self.sandbox:
-            self.base = 'https://sandbox.zenodo.org/api'
+            self.base = 'https://sandbox.zenodo.org'
             self.token_key = 'sandbox_api_token'
         else:
-            self.base = 'https://zenodo.org/api'
+            self.base = 'https://zenodo.org'
             self.token_key = 'api_token'
 
+        # Base URL for the API
+        self.api_base = self.base + '/api'
+
         # Base URL for depositions, relative to the API base
-        self.depositions_base = self.base + '/deposit/depositions'
+        self.depositions_base = self.api_base + '/deposit/depositions'
 
         self.access_token = access_token or pystow.get_config('zenodo', self.token_key)
 
@@ -195,7 +198,7 @@ class Zenodo:
     def get_record(self, record_id: Union[int, str]) -> requests.Response:
         """Get the metadata for a given record."""
         res = requests.get(
-            f'{self.base}/records/{record_id}',
+            f'{self.api_base}/records/{record_id}',
             params={'access_token': self.access_token},
         )
         res.raise_for_status()
