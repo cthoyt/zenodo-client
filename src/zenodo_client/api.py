@@ -56,7 +56,7 @@ def update_zenodo(deposition_id: str, paths: Union[str, Iterable[str]], **kwargs
 
 def download_zenodo(deposition_id: str, path: str, force: bool = False, **kwargs):
     """Download a Zenodo record."""
-    return Zenodo(**kwargs).download(deposition_id, path=path, force=force)
+    return Zenodo(**kwargs).download(deposition_id, name=path, force=force)
 
 
 def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs):
@@ -212,11 +212,11 @@ class Zenodo:
         logger.debug('latest for zenodo.record:%s is zenodo.record:%s', record_id, latest)
         return latest
 
-    def download(self, record_id: Union[int, str], path: str, *, force: bool = False, parts: PartsHint = None) -> Path:
+    def download(self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None) -> Path:
         """Download the file for the given record.
 
         :param record_id: The Zenodo record id
-        :param path: The name of the file in the Zenodo record
+        :param name: The name of the file in the Zenodo record
         :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
             ``<PYSTOW_HOME>/zendoo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
             consistent concept record ID for all versions of the same record. If a function is given, the function
@@ -246,17 +246,17 @@ class Zenodo:
         logger.debug('version for zenodo.record:%s is %s', record_id, version)
 
         for file in res_json['files']:
-            if file['key'] == path:
+            if file['key'] == name:
                 url = file['links']['self']
                 break
         else:
-            raise FileNotFoundError(f'zenodo.record:{record_id} does not have a file with key {path}')
+            raise FileNotFoundError(f'zenodo.record:{record_id} does not have a file with key {name}')
 
         if parts is None:
-            parts = ['zenodo', concept_record_id, version, path]
+            parts = ['zenodo', concept_record_id, version]
         elif callable(parts):
             parts = parts(concept_record_id, str(record_id), version)
-        return pystow.ensure(*parts, url=url, force=force)
+        return pystow.ensure(*parts, name=name, url=url, force=force)
 
     def download_latest(
         self,
