@@ -20,7 +20,7 @@ from more_click import verbose_option
 
 from .api import download_zenodo, download_zenodo_latest, update_zenodo
 
-__all__ = ['main']
+__all__ = ["main"]
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +31,10 @@ def main():
 
 
 @main.command()
-@click.argument('deposition')
-@click.argument('path')
-@click.option('--force', is_flag=True)
-@click.option('--latest', is_flag=True)
+@click.argument("deposition")
+@click.argument("path")
+@click.option("--force", is_flag=True)
+@click.option("--latest", is_flag=True)
 def download(deposition: str, path: str, force: bool, latest: bool):
     """Ensure a record is downloaded."""
     if latest:
@@ -44,8 +44,8 @@ def download(deposition: str, path: str, force: bool, latest: bool):
 
 
 @main.group()
-@click.argument('deposition')
-@click.argument('paths', nargs=-1)
+@click.argument("deposition")
+@click.argument("paths", nargs=-1)
 @verbose_option
 @click.version_option()
 def update(deposition, paths):
@@ -53,5 +53,5 @@ def update(deposition, paths):
     update_zenodo(deposition, paths)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
