@@ -89,7 +89,7 @@ class Zenodo:
         # Base URL for depositions, relative to the API base
         self.depositions_base = self.api_base + "/deposit/depositions"
 
-        self.access_token = access_token or pystow.get_config("zenodo", self.token_key)
+        self.access_token = pystow.get_config("zenodo", self.token_key, passthrough=access_token, raise_on_missing=True)
 
     def create(self, data: Data, paths: Paths) -> requests.Response:
         """Create a record.
