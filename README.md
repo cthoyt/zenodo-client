@@ -62,7 +62,9 @@ data = Metadata(
 res = ensure_zenodo(
     key='test3',
     data=data,
-    paths='/Users/cthoyt/Desktop/test1.png',
+    paths=[
+        '/Users/cthoyt/Desktop/test1.png',
+    ],
     sandbox=True,
 )
 from pprint import pprint
@@ -85,7 +87,7 @@ SANDBOX_DEP_ID = '724868'
 # dumped to the same place by a given script
 paths = [
     # os.path.join(DATABASE_DIRECTORY, 'alts_sample.tsv')
-    '/Users/cthoyt/Desktop/alts_sample.tsv'
+    '/Users/cthoyt/Desktop/alts_sample.tsv',
 ]
 
 # Don't forget to set the ZENODO_API_TOKEN environment variable or
