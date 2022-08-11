@@ -91,7 +91,7 @@ def _drop_none(d: Dict[K, Optional[V]]) -> Iterable[Tuple[K, V]]:
 
 def drop_none(d: Dict[K, Optional[V]]) -> Dict[K, V]:
     """Drop (nested) entries with None value."""
-    return _drop_none(d)
+    return dict(_drop_none(d))
 
 
 class Zenodo:
