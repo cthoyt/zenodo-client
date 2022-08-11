@@ -7,7 +7,19 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import pystow
 import requests
@@ -65,6 +77,23 @@ def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, *
     return Zenodo(**kwargs).download_latest(deposition_id, path=path, force=force)
 
 
+K, V = TypeVar("K"), TypeVar("V")
+
+
+def _drop_none(d: Dict[K, Optional[V]]) -> Iterable[Tuple[K, V]]:
+    for k, v in d.items():
+        if v is None:
+            continue
+        if isinstance(v, dict):
+            v = drop_none(v)
+        yield k, v
+
+
+def drop_none(d: Dict[K, Optional[V]]) -> Dict[K, V]:
+    """Drop (nested) entries with None value."""
+    return _drop_none(d)
+
+
 class Zenodo:
     """A wrapper around parts of the Zenodo API."""
 
@@ -100,9 +129,8 @@ class Zenodo:
         :raises ValueError: if the response is missing a "bucket"
         """
         if isinstance(data, Metadata):
-            data = {
-                "metadata": {key: value for key, value in data.to_dict().items() if value},
-            }
+            data = {"metadata": data.to_dict()}
+        data = drop_none(data)
 
         res = requests.post(
             self.depositions_base,
