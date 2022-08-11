@@ -109,6 +109,7 @@ class Zenodo:
             json=data,
             params={"access_token": self.access_token},
         )
+        # TODO: print cause, cf. https://developers.zenodo.org/#errors
         res.raise_for_status()
 
         res_json = res.json()
