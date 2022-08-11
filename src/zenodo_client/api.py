@@ -10,14 +10,11 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     List,
     Mapping,
     Optional,
     Sequence,
-    Tuple,
-    TypeVar,
     Union,
 )
 
@@ -77,21 +74,13 @@ def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, *
     return Zenodo(**kwargs).download_latest(deposition_id, path=path, force=force)
 
 
-K, V = TypeVar("K"), TypeVar("V")
-
-
-def _drop_none(d: Dict[K, Optional[V]]) -> Iterable[Tuple[K, V]]:
-    for k, v in d.items():
-        if v is None:
-            continue
-        if isinstance(v, dict):
-            v = drop_none(v)
-        yield k, v
-
-
-def drop_none(d: Dict[K, Optional[V]]) -> Dict[K, V]:
+def drop_none(d):
     """Drop (nested) entries with None value."""
-    return dict(_drop_none(d))
+    if isinstance(d, list):
+        return [drop_none(e) for e in d]
+    if not isinstance(d, dict):
+        return d
+    return {k: drop_none(v) for k, v in d.items() if v}
 
 
 class Zenodo:
@@ -120,10 +109,10 @@ class Zenodo:
 
         self.access_token = pystow.get_config("zenodo", self.token_key, passthrough=access_token, raise_on_missing=True)
 
-    def raise_on_error(res: requests.Response) -> None:
+    def raise_on_error(self, res: requests.Response) -> None:
         """Raise an error for error status, and log reasons."""
         # print cause, cf. https://developers.zenodo.org/#errors
-        if res.status_code != res.ok:
+        if res.status_code == 400:
             logger.error(f"Cause: {res.json()}")
         res.raise_for_status()
 
