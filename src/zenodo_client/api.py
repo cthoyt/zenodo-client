@@ -120,6 +120,13 @@ class Zenodo:
 
         self.access_token = pystow.get_config("zenodo", self.token_key, passthrough=access_token, raise_on_missing=True)
 
+    def raise_on_error(res: requests.Response) -> None:
+        """Raise an error for error status, and log reasons."""
+        # print cause, cf. https://developers.zenodo.org/#errors
+        if res.status_code != res.ok:
+            logger.error(f"Cause: {res.json()}")
+        res.raise_for_status()
+
     def create(self, data: Data, paths: Paths) -> requests.Response:
         """Create a record.
 
@@ -137,8 +144,7 @@ class Zenodo:
             json=data,
             params={"access_token": self.access_token},
         )
-        # TODO: print cause, cf. https://developers.zenodo.org/#errors
-        res.raise_for_status()
+        self.raise_on_error(res)
 
         res_json = res.json()
         bucket = res_json.get("links", {}).get("bucket")
