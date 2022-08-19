@@ -65,7 +65,7 @@ res = ensure_zenodo(
     paths=[
         '/Users/cthoyt/Desktop/test1.png',
     ],
-    sandbox=True,
+    sandbox=True,  # remove this when you're ready to upload to real Zenodo
 )
 from pprint import pprint
 
