@@ -7,16 +7,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence, Union
 
 import pystow
 import requests
