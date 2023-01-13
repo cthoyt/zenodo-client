@@ -60,7 +60,8 @@ data = Metadata(
     ],
 )
 res = ensure_zenodo(
-    key='test3',
+    key='test3',  # this is a unique key you pick that will be used to store
+                  # the numeric deposition ID on your local system's cache
     data=data,
     paths=[
         '/Users/cthoyt/Desktop/test1.png',
