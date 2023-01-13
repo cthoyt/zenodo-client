@@ -32,17 +32,9 @@ PartsHint = Union[None, Sequence[str], PartsFunc]
 Paths = Union[str, Path, Iterable[str], Iterable[Path]]
 
 
-def ensure_zenodo(key: str, data: Data, paths: Union[str, Iterable[str]], **kwargs) -> requests.Response:
+def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Response:
     """Create a Zenodo record if it doesn't exist, or update one that does."""
-    deposition_id = pystow.get_config("zenodo", key)
-    if deposition_id is not None:
-        return update_zenodo(deposition_id, paths, **kwargs)
-
-    res = create_zenodo(data, paths, **kwargs)
-    # Write the ID to the key in the local configuration
-    # so it doesn't need to be created from scratch next time
-    pystow.write_config("zenodo", key, str(res.json()["id"]))
-    return res
+    return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
 def create_zenodo(data: Data, paths: Paths, **kwargs) -> requests.Response:
@@ -55,14 +47,14 @@ def update_zenodo(deposition_id: str, paths: Paths, **kwargs) -> requests.Respon
     return Zenodo(**kwargs).update(deposition_id, paths)
 
 
-def download_zenodo(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
+def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
     """Download a Zenodo record."""
-    return Zenodo(**kwargs).download(deposition_id, name=path, force=force)
+    return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
 
 
 def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
     """Download the latest Zenodo record."""
-    return Zenodo(**kwargs).download_latest(deposition_id, path=path, force=force)
+    return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
 
 
 class Zenodo:
@@ -78,18 +70,32 @@ class Zenodo:
         self.sandbox = sandbox
         if self.sandbox:
             self.base = "https://sandbox.zenodo.org"
-            self.token_key = "sandbox_api_token"
+            self.token_key = "zenodo-sandbox"
         else:
             self.base = "https://zenodo.org"
-            self.token_key = "api_token"
+            self.token_key = "zenodo"
 
         # Base URL for the API
         self.api_base = self.base + "/api"
+        logger.debug("using Zenodo API at %s", self.api_base)
 
         # Base URL for depositions, relative to the API base
         self.depositions_base = self.api_base + "/deposit/depositions"
 
-        self.access_token = pystow.get_config("zenodo", self.token_key, passthrough=access_token, raise_on_missing=True)
+        self.access_token = pystow.get_config(self.token_key, "api_token", passthrough=access_token, raise_on_missing=True)
+
+    def ensure(self, key: str, data: Data, paths: Paths) -> requests.Response:
+        """Create a Zenodo record if it doesn't exist, or update one that does."""
+        deposition_id = pystow.get_config(self.token_key, key)
+        if deposition_id is not None:
+            logger.info("mapped local key %s to deposition %s", key, deposition_id)
+            return self.update(deposition_id=deposition_id, paths=paths)
+
+        res = self.create(data=data, paths=paths)
+        # Write the ID to the key in the local configuration
+        # so it doesn't need to be created from scratch next time
+        pystow.write_config(self.token_key, key, str(res.json()["id"]))
+        return res
 
     def create(self, data: Data, paths: Paths) -> requests.Response:
         """Create a record.
@@ -100,8 +106,9 @@ class Zenodo:
         :raises ValueError: if the response is missing a "bucket"
         """
         if isinstance(data, Metadata):
+            logger.debug("serializing metadata")
             data = {
-                "metadata": {key: value for key, value in data.to_dict().items() if value},
+                "metadata": {key: value for key, value in data.dict(exclude_none=True).items() if value},
             }
 
         res = requests.post(
@@ -116,8 +123,12 @@ class Zenodo:
         if bucket is None:
             raise ValueError(f"No bucket in response. Got: {res_json}")
 
+        logger.info("uploading files to bucket %s", bucket)
         self._upload_files(bucket=bucket, paths=paths)
-        return self.publish(res_json["id"])
+
+        deposition_id = res_json["id"]
+        logger.info("publishing files to deposition %s", deposition_id)
+        return self.publish(deposition_id)
 
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
         """Publish a record that's in edit mode.
@@ -255,7 +266,7 @@ class Zenodo:
             raise FileNotFoundError(f"zenodo.record:{record_id} does not have a file with key {name}")
 
         if parts is None:
-            parts = ["zenodo", concept_record_id, version]
+            parts = [self.token_key, concept_record_id, version]
         elif callable(parts):
             parts = parts(concept_record_id, str(record_id), version)
         return pystow.ensure(*parts, name=name, url=url, force=force)
@@ -263,14 +274,14 @@ class Zenodo:
     def download_latest(
         self,
         record_id: Union[int, str],
-        path: str,
+        name: str,
         *,
         force: bool = False,
         parts: PartsHint = None,
     ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
-        return self.download(latest_record_id, path, force=force, parts=parts)
+        return self.download(latest_record_id, name=name, force=force, parts=parts)
 
 
 def _prepare_new_version(old_version: str) -> str:
