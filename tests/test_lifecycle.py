@@ -79,5 +79,5 @@ class TestLifecycle(unittest.TestCase):
         path.write_text(TEXT_V3)
         res = self.zenodo.update(deposition_id, paths=path)
         res_json = res.json()
-        print(f"SEE V3 ON ZENODO: {res_json['links']['record_html']}")
-        self.assertEqual(f"{today}-2", res_json["metadata"]["version"])
+        # print(f"SEE V3 ON ZENODO: {res_json['links']['record_html']}")
+        self.assertEqual(f"{data.version}-2", res_json["metadata"]["version"])
