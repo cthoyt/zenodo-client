@@ -70,10 +70,19 @@ class Zenodo:
         self.sandbox = sandbox
         if self.sandbox:
             self.base = "https://sandbox.zenodo.org"
-            self.token_key = "zenodo-sandbox"
+            # Use subsection support introduced in PyStow in
+            # https://github.com/cthoyt/pystow/pull/59
+            self.module = "zenodo:sandbox"
+            self.access_token = pystow.get_config(self.module, "api_token", passthrough=access_token)
+            if self.access_token is None:
+                # old-style fallback
+                self.access_token = pystow.get_config("zenodo", "sandbox_api_token", raise_on_missing=True)
         else:
             self.base = "https://zenodo.org"
-            self.token_key = "zenodo"
+            self.module = "zenodo"
+            self.access_token = pystow.get_config(
+                self.module, "api_token", passthrough=access_token, raise_on_missing=True
+            )
 
         # Base URL for the API
         self.api_base = self.base + "/api"
@@ -82,11 +91,9 @@ class Zenodo:
         # Base URL for depositions, relative to the API base
         self.depositions_base = self.api_base + "/deposit/depositions"
 
-        self.access_token = pystow.get_config(self.token_key, "api_token", passthrough=access_token, raise_on_missing=True)
-
     def ensure(self, key: str, data: Data, paths: Paths) -> requests.Response:
         """Create a Zenodo record if it doesn't exist, or update one that does."""
-        deposition_id = pystow.get_config(self.token_key, key)
+        deposition_id = pystow.get_config(self.module, key)
         if deposition_id is not None:
             logger.info("mapped local key %s to deposition %s", key, deposition_id)
             return self.update(deposition_id=deposition_id, paths=paths)
@@ -94,7 +101,7 @@ class Zenodo:
         res = self.create(data=data, paths=paths)
         # Write the ID to the key in the local configuration
         # so it doesn't need to be created from scratch next time
-        pystow.write_config(self.token_key, key, str(res.json()["id"]))
+        pystow.write_config(self.module, key, str(res.json()["id"]))
         return res
 
     def create(self, data: Data, paths: Paths) -> requests.Response:
@@ -266,7 +273,7 @@ class Zenodo:
             raise FileNotFoundError(f"zenodo.record:{record_id} does not have a file with key {name}")
 
         if parts is None:
-            parts = [self.token_key, concept_record_id, version]
+            parts = [self.module.replace(":", "-"), concept_record_id, version]
         elif callable(parts):
             parts = parts(concept_record_id, str(record_id), version)
         return pystow.ensure(*parts, name=name, url=url, force=force)

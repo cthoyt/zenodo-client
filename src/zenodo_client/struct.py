@@ -3,7 +3,8 @@
 """Data structures for Zenodo."""
 
 import datetime
-from typing import Optional, Sequence, Literal
+from typing import Literal, Optional, Sequence
+
 from pydantic import BaseModel, Field
 
 __all__ = [
@@ -25,7 +26,7 @@ class Creator(BaseModel):
     orcid: Optional[str] = Field(description="ORCID identifier of the creator", example="0000-0003-4423-4370")
     gnd: Optional[str] = Field(
         description="German National Library identifier of the creator. "
-                    "See also https://www.wikidata.org/wiki/Property:P227."
+        "See also https://www.wikidata.org/wiki/Property:P227."
     )
 
     def orcid_url(self) -> Optional[str]:
@@ -91,8 +92,9 @@ AccessRight = Literal[
 ]
 
 
-def _today_str()-> str:
+def _today_str() -> str:
     return datetime.datetime.today().strftime("%Y-%m-%d")
+
 
 class Metadata(BaseModel):
     """Metadata for the Zenodo deposition API."""

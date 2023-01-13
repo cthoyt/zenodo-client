@@ -1,13 +1,15 @@
 """Tests for the upload and revision lifecyle."""
 
+import logging
+import tempfile
+import unittest
+from pathlib import Path
+from uuid import uuid4
+
 import pystow
+
 from zenodo_client import Creator, Metadata, Zenodo
 from zenodo_client.struct import _today_str
-import tempfile
-from pathlib import Path
-import logging
-from uuid import uuid4
-import unittest
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +40,13 @@ class TestLifecycle(unittest.TestCase):
         title = "Test Upload"
         data = Metadata(
             title=title,
-            upload_type='dataset',
-            description='test description',
+            upload_type="dataset",
+            description="test description",
             creators=[
                 Creator(
-                    name='Hoyt, Charles Tapley',
-                    affiliation='Harvard Medical School',
-                    orcid='0000-0003-4423-4370',
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                    orcid="0000-0003-4423-4370",
                 ),
             ],
         )
