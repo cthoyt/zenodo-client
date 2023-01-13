@@ -81,3 +81,34 @@ class TestLifecycle(unittest.TestCase):
         res_json = res.json()
         # print(f"SEE V3 ON ZENODO: {res_json['links']['record_html']}")
         self.assertEqual(f"{data.version}-2", res_json["metadata"]["version"])
+
+    def test_create_no_orcid(self):
+        """Test create with no ORCID."""
+        data = Metadata(
+            title="Test Upload",
+            upload_type="dataset",
+            description="test description",
+            creators=[
+                Creator(
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                ),
+            ],
+        )
+        path = self.directory.joinpath("test.txt")
+        path.write_text(TEXT_V1)
+
+        logger.info(f"wrote data to {path}")
+        res = self.zenodo.ensure(
+            key=self.key,
+            data=data,
+            paths=path,
+        )
+        res_json = res.json()
+        # print(f"\n\nSEE V1 ON ZENODO: {res_json['links']['record_html']}")
+
+        self.assertEqual(True, res_json["submitted"])
+        self.assertEqual("done", res_json["state"])
+        self.assertEqual("dataset", res_json["metadata"]["upload_type"])
+        self.assertEqual(data.title, res_json["metadata"]["title"])
+        self.assertEqual(data.version, res_json["metadata"]["version"])
