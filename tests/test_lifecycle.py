@@ -9,7 +9,6 @@ from uuid import uuid4
 import pystow
 
 from zenodo_client import Creator, Metadata, Zenodo
-from zenodo_client.struct import _today_str
 
 logger = logging.getLogger(__name__)
 
