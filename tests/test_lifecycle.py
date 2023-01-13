@@ -37,9 +37,8 @@ class TestLifecycle(unittest.TestCase):
 
     def test_create(self):
         """Test creating a record."""
-        title = "Test Upload"
         data = Metadata(
-            title=title,
+            title="Test Upload",
             upload_type="dataset",
             description="test description",
             creators=[
@@ -60,24 +59,22 @@ class TestLifecycle(unittest.TestCase):
             paths=path,
         )
         res_json = res.json()
-        print(f"\n\nSEE V1 ON ZENODO: {res_json['links']['record_html']}")
-
-        today = _today_str()
+        # print(f"\n\nSEE V1 ON ZENODO: {res_json['links']['record_html']}")
 
         self.assertEqual(True, res_json["submitted"])
         self.assertEqual("done", res_json["state"])
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
-        self.assertEqual(title, res_json["metadata"]["title"])
-        self.assertEqual(today, res_json["metadata"]["version"])
+        self.assertEqual(data.title, res_json["metadata"]["title"])
+        self.assertEqual(data.version, res_json["metadata"]["version"])
 
         deposition_id = res_json["record_id"]
-        print(f"DEPOSITION ID: {deposition_id}")
+        # print(f"DEPOSITION ID: {deposition_id}")
         path.write_text(TEXT_V2)
 
         res = self.zenodo.update(deposition_id, paths=path)
         res_json = res.json()
-        print(f"SEE V2 ON ZENODO: {res_json['links']['record_html']}")
-        self.assertEqual(f"{today}-1", res_json["metadata"]["version"])
+        # print(f"SEE V2 ON ZENODO: {res_json['links']['record_html']}")
+        self.assertEqual(f"{data.version}-1", res_json["metadata"]["version"])
 
         path.write_text(TEXT_V3)
         res = self.zenodo.update(deposition_id, paths=path)
