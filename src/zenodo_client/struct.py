@@ -29,12 +29,14 @@ class Creator(BaseModel):
         "See also https://www.wikidata.org/wiki/Property:P227."
     )
 
+    @property
     def orcid_url(self) -> Optional[str]:
-        """The ORCID identifier as a URL."""
+        """Get the ORCID identifier as a URL."""
         return f"https://orcid.org/{self.orcid}" if self.orcid else None
 
+    @property
     def gnd_url(self) -> Optional[str]:
-        """The GND identifier as a URL."""
+        """Get the GND identifier as a URL."""
         return f"https://d-nb.info/gnd/{self.gnd}"
 
     def __post_init__(self):  # noqa:D105
