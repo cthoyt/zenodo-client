@@ -3,9 +3,10 @@
 """Data structures for Zenodo."""
 
 import datetime
-from typing import Literal, Optional, Sequence
+from typing import Optional, Sequence
 
 from pydantic import BaseModel, Field
+from typing_extensions import Literal
 
 __all__ = [
     "Creator",
