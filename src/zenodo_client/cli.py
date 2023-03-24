@@ -43,7 +43,7 @@ def download(deposition: str, path: str, force: bool, latest: bool):
         download_zenodo(deposition, path, force=force)
 
 
-@main.group()
+@main.command()
 @click.argument("deposition")
 @click.argument("paths", nargs=-1)
 @verbose_option
