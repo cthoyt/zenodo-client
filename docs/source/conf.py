@@ -63,7 +63,6 @@ extensions = [
     "sphinx.ext.todo",
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx_autodoc_typehints',
     'sphinx_click.ext',
 ]
 
@@ -223,7 +222,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    'https://docs.python.org/3/': None,
+    "python": ('https://docs.python.org/3/', None),
     'pystow': ('https://pystow.readthedocs.io/en/latest/', None),
 }
 
