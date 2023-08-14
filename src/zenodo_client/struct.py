@@ -24,19 +24,19 @@ class Creator(BaseModel):
         ..., description="Name of the creator in the format Family name, given names", example="Hoyt, Charles Tapley"
     )
     affiliation: Optional[str] = Field(
-        default=None, 
-        description="affiliation of the creator", 
+        default=None,
+        description="affiliation of the creator",
         example="Harvard Medical School",
     )
     orcid: Optional[str] = Field(
-        default=None, 
+        default=None,
         description="ORCID identifier of the creator",
         example="0000-0003-4423-4370",
     )
     gnd: Optional[str] = Field(
         default=None,
         description="German National Library identifier of the creator. "
-        "See also https://www.wikidata.org/wiki/Property:P227."
+        "See also https://www.wikidata.org/wiki/Property:P227.",
     )
 
     @property
