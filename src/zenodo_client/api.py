@@ -42,9 +42,11 @@ def create_zenodo(data: Data, paths: Paths, publish: bool = False, **kwargs) -> 
     return Zenodo(**kwargs).create(data, paths, publish)
 
 
-def update_zenodo(deposition_id: str, paths: Paths, new_version: bool = True, **kwargs) -> requests.Response:
+def update_zenodo(
+    deposition_id: str, data: Metadata, paths: Paths, publish: bool = True, new_version: bool = True, **kwargs
+) -> requests.Response:
     """Update a Zenodo record."""
-    return Zenodo(**kwargs).update(deposition_id, paths, new_version)
+    return Zenodo(**kwargs).update(deposition_id, data, paths, publish, new_version)
 
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
@@ -109,6 +111,7 @@ class Zenodo:
 
         :param data: The JSON data to send to the new data
         :param paths: Paths to local files to upload
+        :param publish: Publish the deposit after creation
         :return: The response JSON from the Zenodo API
         :raises ValueError: if the response is missing a "bucket"
         """
@@ -163,7 +166,12 @@ class Zenodo:
         return res
 
     def update(
-        self, deposition_id: str, data: Data = None, paths: Paths = [], publish: bool = True, new_version: bool = True
+        self,
+        deposition_id: str,
+        data: Optional[Data] = None,
+        paths: Optional[Paths] = None,
+        publish: bool = True,
+        new_version: bool = True,
     ) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files and metadata.
 
@@ -175,6 +183,8 @@ class Zenodo:
         :raises ValueError: If new_version is enabled, at least data or paths must be given.
         :return: The response JSON from the Zenodo API
         """
+        if paths is None:
+            paths = []
 
         if isinstance(data, Metadata):
             logger.debug("serializing metadata")
@@ -183,9 +193,8 @@ class Zenodo:
             }
 
         if new_version:
-            _paths = [paths] if isinstance(paths, (str, Path)) else paths
-            if not (data or len(_paths) > 0):
-                raise ValueError(f"Updating with a new version requires at least one of 'data' or 'paths'.")
+            if not (data or paths):
+                raise ValueError("Updating with a new version requires at least one of 'data' or 'paths'.")
 
             logger.info("creating new version of %s", deposition_id)
             # Prepare a new version based on the old version
@@ -273,7 +282,9 @@ class Zenodo:
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
         return latest
 
-    def download(self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None) -> Path:
+    def download(
+        self, record_id: Union[int, str], name: str, *, force: bool = False, parts: Optional[PartsHint] = None
+    ) -> Path:
         """Download the file for the given record.
 
         :param record_id: The Zenodo record id
@@ -327,7 +338,7 @@ class Zenodo:
         name: str,
         *,
         force: bool = False,
-        parts: PartsHint = None,
+        parts: Optional[PartsHint] = None,
     ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
