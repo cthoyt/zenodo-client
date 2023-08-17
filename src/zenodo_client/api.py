@@ -162,9 +162,11 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, data: Data = None, paths: Paths = [], publish: bool = True, new_version: bool = True) -> requests.Response:
+    def update(
+        self, deposition_id: str, data: Data = None, paths: Paths = [], publish: bool = True, new_version: bool = True
+    ) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files and metadata.
-        
+
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
         :param data: The metadata of the deposition that should be updated.
         :param paths: Paths to local files to upload.
@@ -173,7 +175,7 @@ class Zenodo:
         :raises ValueError: If new_version is enabled, at least data or paths must be given.
         :return: The response JSON from the Zenodo API
         """
-        
+
         if isinstance(data, Metadata):
             logger.debug("serializing metadata")
             data = {
@@ -197,7 +199,7 @@ class Zenodo:
             # Parse out the new version (@zenodo please give this as its own field!)
             deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
             logger.info("created new version %s", deposition_id)
-        
+
         # Get all metadata associated with the new version (this has updated DOIs, etc.)
         # see: https://developers.zenodo.org/#retrieve
         res = requests.get(
@@ -217,7 +219,7 @@ class Zenodo:
             deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
 
         bucket = deposition_data["links"]["bucket"]
-        
+
         # Upload new files. It calculates the hash on all of these, and if no files have changed,
         #  there will be no update
         self._upload_files(bucket=bucket, paths=paths)

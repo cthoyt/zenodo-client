@@ -140,22 +140,14 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(0, len(res_create_json["files"]))
 
         path = self.directory.joinpath("test.txt")
-        expected_doi = (res_create_json["metadata"]["prereserve_doi"]["doi"])
+        expected_doi = res_create_json["metadata"]["prereserve_doi"]["doi"]
         path.write_text("DOI: https://doi.org/%s" % expected_doi)
 
         data.title = "Test Upload with Update"
-        
-        res = self.zenodo.update(
-            deposition_id=deposition_id,
-            data=data,
-            paths=[
-                path
-            ],
-            publish=False,
-            new_version=False
-        )
+
+        res = self.zenodo.update(deposition_id=deposition_id, data=data, paths=[path], publish=False, new_version=False)
         res_update_json = res.json()
-        
+
         self.assertEqual(False, res_update_json["submitted"])
         self.assertEqual("unsubmitted", res_update_json["state"])
         self.assertEqual("dataset", res_update_json["metadata"]["upload_type"])
@@ -164,13 +156,10 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(1, len(res_update_json["files"]))
         self.assertEqual("test.txt", res_update_json["files"][0]["filename"])
         import hashlib
-        self.assertEqual(hashlib.md5(open(path, 'rb').read()).hexdigest(), res_update_json["files"][0]["checksum"])
-        
-        res_publish = self.zenodo.update(
-            deposition_id=deposition_id,
-            new_version=False,
-            publish=True
-        )
+
+        self.assertEqual(hashlib.md5(open(path, "rb").read()).hexdigest(), res_update_json["files"][0]["checksum"])
+
+        res_publish = self.zenodo.update(deposition_id=deposition_id, new_version=False, publish=True)
         res_publish_json = res_publish.json()
 
         self.assertEqual(True, res_publish_json["submitted"])
@@ -197,10 +186,7 @@ class TestLifecycle(unittest.TestCase):
         deposition_id = res_create_json["id"]
 
         with self.assertRaises(ValueError) as cm:
-            self.zenodo.update(
-                deposition_id=deposition_id,
-                new_version=True
-            )
+            self.zenodo.update(deposition_id=deposition_id, new_version=True)
         self.assertIn("at least one of", str(cm.exception))
 
     def test_update_metadata(self):
