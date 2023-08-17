@@ -44,6 +44,8 @@ Want to Contribute?
     $ git checkout -b feature/<YourFeatureName>
 
 5. This project should be well tested, so write unit tests in the :code:`tests/` directory
+    1. Run tests with :code:`tox` (see below) or with `python -m pytest`
+    2. Tests need a Zenodo sandbox API token provided with a :code:`pystow` configuration (e.g., a file `~/.config/zenodo.ini` with setting `sandbox_api_token`))
 6. Check that all tests are passing and code coverage is good with :code:`tox` before committing.
 
 .. code-block:: sh

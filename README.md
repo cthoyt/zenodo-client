@@ -73,7 +73,7 @@ from pprint import pprint
 pprint(res.json())
 ```
 
-A real-world example can be found here: https://github.com/cthoyt/nsockg.
+A real-world example can be found here: <https://github.com/cthoyt/nsockg>.
 
 The following example shows how to use the Zenodo uploader if you already know what your deposition
 identifier is.
@@ -115,6 +115,53 @@ from zenodo_client import Zenodo
 zenodo = Zenodo()
 OOH_NA_NA_RECORD = '4020486'
 new_record = zenodo.download_latest(OOH_NA_NA_RECORD, 'names.tsv.gz')
+```
+
+The following example creates a new deposit for a record and uses the prereserved DOI before uploading files but does not publish the record, allowing manual editing in the Zenodo UI.
+
+```python
+from zenodo_client import Creator, Metadata, create_zenodo, upload_zenodo
+
+# Define the metadata that will be used on initial upload
+data = Metadata(
+    title='Test Upload 3',
+    upload_type='dataset',
+    description='test description',
+    creators=[
+        Creator(
+            name='Hoyt, Charles Tapley',
+            affiliation='Harvard Medical School',
+            orcid='0000-0003-4423-4370',
+        ),
+    ],
+)
+
+res = create_zenodo(
+    data=data,
+    sandbox=True,
+    paths=[],
+    publish=False
+)
+
+from pprint import pprint
+pprint(res.json())
+
+# Create a file using the expected DOI
+with open('file.txt', 'w') as file:  
+    file.writelines(res.json()["metadata"]["prereserve_doi"]["doi"])
+
+paths = [
+    os.path.join(os.getcwd(), 'file.txt),
+]
+
+# Add files
+res = update_zenodo(deposition_id=res["deposition_id"], paths=paths)
+pprint(res.json())
+
+# Update metadata (can also be combined with files) and publish
+data.description='corrected test description'
+res = update_zenodo(deposition_id=res["deposition_id"], data=data, publish=True)
+pprint(res.json())
 ```
 
 A real-world example can be found [here](https://github.com/pyobo/pyobo/blob/master/src/pyobo/resource_utils.py)
