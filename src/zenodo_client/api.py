@@ -43,7 +43,7 @@ def create_zenodo(data: Data, paths: Paths, *, publish: bool = False, **kwargs) 
 
 
 def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
-    """Update the files in a Zenodo record."""
+    """Update a Zenodo record."""
     return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
 
 
