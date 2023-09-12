@@ -4,6 +4,7 @@ Tests for the upload and revision lifecyle.
 Run tests without tox: python -m pytest
 """
 
+import hashlib
 import logging
 import tempfile
 import unittest
@@ -168,9 +169,7 @@ class TestLifecycle(unittest.TestCase):
         res = self.zenodo.update(deposition_id=deposition_id, paths=[path], publish=False)
         res_update_json = res.json()
 
-        import hashlib
-
-        path_hash = hashlib.md5(open(path, "rb").read()).hexdigest()
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()
 
         self.assertEqual(False, res_update_json["submitted"])
         self.assertEqual("unsubmitted", res_update_json["state"])
@@ -202,7 +201,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.title, res_update_metadata_json["metadata"]["title"])
 
     def test_multi_step_publish(self):
-        """Test seperate steps of creation, upload, and publishing."""
+        """Test separate steps of creation, upload, and publishing."""
         data = Metadata(
             title="Test Upload",
             upload_type="dataset",
@@ -246,7 +245,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.title, res_publish_json["metadata"]["title"])
 
     def test_update_metadata(self):
-        """Test updateing (partial) metadata with/without new versions."""
+        """Test updating (partial) metadata with/without new versions."""
         data = Metadata(
             title="Test Metadata",
             upload_type="dataset",
