@@ -47,7 +47,7 @@ def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **k
     return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
 
 
-def update__metadata_zenodo(deposition_id: str, data: Metadata, *, publish: bool = True, **kwargs) -> requests.Response:
+def update_metadata_zenodo(deposition_id: str, data: Metadata, *, publish: bool = True, **kwargs) -> requests.Response:
     """Update the metadata of a Zenodo record."""
     return Zenodo(**kwargs).update_metadata(deposition_id, data, publish=publish)
 
