@@ -158,9 +158,12 @@ paths = [
 res = update_zenodo(deposition_id=res["deposition_id"], paths=paths)
 pprint(res.json())
 
-# Update metadata (can also be combined with files) and publish
+# Update metadata (can also be combined with publish)
 data.description='corrected test description'
-res = update_zenodo(deposition_id=res["deposition_id"], data=data, publish=True)
+res = update_metadata_zenodo(deposition_id=res["deposition_id"], data=data)
+pprint(res.json())
+
+res = publish_zenodo(deposition_id=res["deposition_id"])
 pprint(res.json())
 ```
 
