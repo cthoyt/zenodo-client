@@ -145,16 +145,17 @@ class Zenodo:
         self._upload_files(bucket=bucket, paths=paths)
 
         deposition_id = res_json["id"]
-        if publish:
-            logger.info("publishing files to deposition %s", deposition_id)
-            return self.publish(deposition_id)
-        else:
+        if not publish:
             res = requests.get(
                 f"{self.depositions_base}/{deposition_id}",
                 params={"access_token": self.access_token},
             )
             res.raise_for_status()
             return res
+
+        logger.info("publishing files to deposition %s", deposition_id)
+        return self.publish(deposition_id)
+
 
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
         """Publish a record that's in edit mode.
@@ -238,12 +239,13 @@ class Zenodo:
         #  there will be no update
         self._upload_files(bucket=bucket, paths=paths)
 
-        if publish:
-            # Send the publish command
-            return self.publish(new_deposition_id)
-        else:
+        if not publish:
             # Return the response with latest metadata
             return res
+
+        # Send the publish command
+        return self.publish(new_deposition_id)
+
 
     def update_metadata(
         self,
@@ -293,11 +295,12 @@ class Zenodo:
         )
         res.raise_for_status()
 
-        if publish:
-            return self.publish(deposition_id)
-        else:
+        if not publish:
             # Return the latest deposition metadata
             return res
+
+        return self.publish(deposition_id)
+
 
     def _upload_files(self, *, bucket: str, paths: Paths) -> List[requests.Response]:
         _paths = [paths] if isinstance(paths, (str, Path)) else paths
