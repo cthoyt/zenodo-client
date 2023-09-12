@@ -39,7 +39,7 @@ def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Resp
 
 def create_zenodo(data: Data, paths: Paths, *, publish: bool = False, **kwargs) -> requests.Response:
     """Create a Zenodo record."""
-    return Zenodo(**kwargs).create(data, paths, publish)
+    return Zenodo(**kwargs).create(data, paths, publish=publish)
 
 
 def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
@@ -52,7 +52,7 @@ def update_metadata_zenodo(deposition_id: str, data: Metadata, *, publish: bool 
     return Zenodo(**kwargs).update_metadata(deposition_id, data, publish=publish)
 
 
-def publish_zenodo(deposition_id: str, sleep: bool = True, **kwargs) -> requests.Response:
+def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs) -> requests.Response:
     """Publish a Zenodo record."""
     return Zenodo(**kwargs).publish(deposition_id, sleep=sleep)
 
@@ -114,7 +114,7 @@ class Zenodo:
         pystow.write_config(self.module, key, str(res.json()["id"]))
         return res
 
-    def create(self, data: Data, paths: Paths, publish: bool = True) -> requests.Response:
+    def create(self, data: Data, paths: Paths, *, publish: bool = True) -> requests.Response:
         """Create a record.
 
         :param data: The JSON data to send to the new data
@@ -190,7 +190,7 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
+    def update(self, deposition_id: str, paths: Paths, *, publish: bool = True) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files.
 
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
@@ -248,6 +248,7 @@ class Zenodo:
         self,
         deposition_id: str,
         data: Data,
+        *,
         publish: bool = True,
         # new_version only is given to updaes where files change!
     ) -> requests.Response:
