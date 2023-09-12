@@ -37,34 +37,34 @@ def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Resp
     return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
-def create_zenodo(data: Data, paths: Paths, publish: bool = False, **kwargs) -> requests.Response:
+def create_zenodo(data: Data, paths: Paths, *, publish: bool = False, **kwargs) -> requests.Response:
     """Create a Zenodo record."""
     return Zenodo(**kwargs).create(data, paths, publish)
 
 
-def update_zenodo(deposition_id: str, paths: Paths, publish: bool = True, **kwargs) -> requests.Response:
+def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
     """Update the files in a Zenodo record."""
-    return Zenodo(**kwargs).update(deposition_id=deposition_id, paths=paths, publish=publish)
+    return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
 
 
-def update__metadata_zenodo(deposition_id: str, data: Metadata, publish: bool = True, **kwargs) -> requests.Response:
+def update__metadata_zenodo(deposition_id: str, data: Metadata, *, publish: bool = True, **kwargs) -> requests.Response:
     """Update the metadata of a Zenodo record."""
-    return Zenodo(**kwargs).update_metadata(deposition_id=deposition_id, data=data, publish=publish)
+    return Zenodo(**kwargs).update_metadata(deposition_id, data, publish=publish)
 
 
 def publish_zenodo(deposition_id: str, sleep: bool = True, **kwargs) -> requests.Response:
     """Publish a Zenodo record."""
-    return Zenodo(**kwargs).publish(deposition_id=deposition_id, sleep=sleep)
+    return Zenodo(**kwargs).publish(deposition_id, sleep=sleep)
 
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
     """Download a Zenodo record."""
-    return Zenodo(**kwargs).download(deposition_id=deposition_id, name=name, force=force)
+    return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
 
 
 def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
     """Download the latest Zenodo record."""
-    return Zenodo(**kwargs).download_latest(deposition_id=deposition_id, name=path, force=force)
+    return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
 
 
 class Zenodo:
