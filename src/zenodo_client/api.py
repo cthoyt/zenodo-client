@@ -198,7 +198,6 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-
         # Prepare a new version based on the old version
         # see: https://developers.zenodo.org/#new-version)
         res = requests.post(
@@ -259,7 +258,6 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-
         if isinstance(data, Metadata):
             logger.debug("serializing metadata")
             data = {
