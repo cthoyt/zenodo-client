@@ -116,8 +116,31 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.title, res_json["metadata"]["title"])
         self.assertEqual(data.version, res_json["metadata"]["version"])
 
-    def test_two_step_publish(self):
+    def test_create_without_publish(self):
         """Test create without publishing."""
+        data = Metadata(
+            title="Test Upload",
+            upload_type="dataset",
+            description="test description",
+            creators=[
+                Creator(
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                    orcid="0000-0003-4423-4370",
+                ),
+            ],
+        )
+
+        res = self.zenodo.create(data=data, paths=[], publish=False)
+        res_create_json = res.json()
+        
+        self.assertEqual(False, res_create_json["submitted"])
+        self.assertEqual("unsubmitted", res_create_json["state"])
+        self.assertEqual(0, len(res_create_json["files"]))
+
+    
+    def test_update_with_metadata_publish(self):
+        """Test seperating creation, uploading, updating, and publishing."""
         data = Metadata(
             title="Test Upload",
             upload_type="dataset",
@@ -136,38 +159,50 @@ class TestLifecycle(unittest.TestCase):
         deposition_id = res_create_json["id"]
 
         self.assertEqual(False, res_create_json["submitted"])
-        self.assertEqual("unsubmitted", res_create_json["state"])
+        self.assertEqual("submitted", res_create_json["state"])
         self.assertEqual(0, len(res_create_json["files"]))
 
         path = self.directory.joinpath("test.txt")
         expected_doi = res_create_json["metadata"]["prereserve_doi"]["doi"]
         path.write_text("DOI: https://doi.org/%s" % expected_doi)
 
-        data.title = "Test Upload with Update"
-
-        res = self.zenodo.update(deposition_id=deposition_id, data=data, paths=[path], publish=False, new_version=False)
+        res = self.zenodo.update(deposition_id=deposition_id, paths=[path], publish=False)
         res_update_json = res.json()
+
+        import hashlib
+        path_hash = hashlib.md5(open(path, "rb").read()).hexdigest()
 
         self.assertEqual(False, res_update_json["submitted"])
         self.assertEqual("unsubmitted", res_update_json["state"])
-        self.assertEqual("dataset", res_update_json["metadata"]["upload_type"])
         self.assertEqual(data.title, res_update_json["metadata"]["title"])
         self.assertEqual(data.version, res_update_json["metadata"]["version"])
         self.assertEqual(1, len(res_update_json["files"]))
         self.assertEqual("test.txt", res_update_json["files"][0]["filename"])
-        import hashlib
 
-        self.assertEqual(hashlib.md5(open(path, "rb").read()).hexdigest(), res_update_json["files"][0]["checksum"])
+        path.write_text("# Test New Version with Change")
+        res = self.zenodo.update(deposition_id=deposition_id, paths=[path], publish=False)
+        res_update_json = res.json()
 
-        res_publish = self.zenodo.update(deposition_id=deposition_id, new_version=False, publish=True)
-        res_publish_json = res_publish.json()
+        self.assertEqual(False, res_update_json["submitted"])
+        self.assertEqual("unsubmitted", res_update_json["state"])
+        self.assertEqual(2, len(res_update_json["files"]))
 
-        self.assertEqual(True, res_publish_json["submitted"])
-        self.assertEqual("done", res_publish_json["state"])
-        self.assertEqual(expected_doi, res_publish_json["doi"])
+        self.assertEqual("NEW", res_update_json["metadata"]["version"])
+        self.assertEqual("test.md", res_update_json["files"][0]["filename"])
+        self.assertEqual("test.md", res_update_json["files"][1]["filename"])
+        self.assertEqual(path_hash, res_update_json["files"][0]["checksum"])
+        self.assertEqual(hashlib.md5(open(path, "rb").read()).hexdigest(), res_update_json["files"][1]["checksum"])
 
-    def test_update_new_version(self):
-        """Test updateing with publishing and with/without metadata changes."""
+        data.title = "Test Publication with Metadata Update"
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=data, publish=True)
+        res_update_metadata_json = res.json()
+        self.assertEqual(True, res_update_metadata_json["submitted"])
+        self.assertEqual("done", res_update_metadata_json["state"])
+        self.assertEqual(expected_doi, res_update_metadata_json["doi"])
+        self.assertEqual(data.title, res_update_metadata_json["metadata"]["title"])
+
+    def test_multi_step_publish(self):
+        """Test seperate steps of creation, upload, and publishing."""
         data = Metadata(
             title="Test Upload",
             upload_type="dataset",
@@ -180,16 +215,93 @@ class TestLifecycle(unittest.TestCase):
                 ),
             ],
         )
+        path = self.directory.joinpath("test.txt")
+        path.write_text("it's all metadata after this")
 
-        res = self.zenodo.create(data=data, paths=[], publish=False)
+        res = self.zenodo.create(data=data, paths=[path], publish=False)
         res_create_json = res.json()
         deposition_id = res_create_json["id"]
 
-        with self.assertRaises(ValueError) as cm:
-            self.zenodo.update(deposition_id=deposition_id, new_version=True)
-        self.assertIn("at least one of", str(cm.exception))
+        data.title = "Test Upload with an Update to Unpublished Deposition"
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=data, publish=False)
+        res_update_json = res.json()
+
+        self.assertEqual(False, res_update_json["submitted"])
+        self.assertEqual("unsubmitted", res_update_json["state"])
+        self.assertEqual("dataset", res_update_json["metadata"]["upload_type"])
+        self.assertEqual(data.title, res_update_json["metadata"]["title"])
+        self.assertEqual(data.version, res_update_json["metadata"]["version"])
+        self.assertEqual(1, len(res_update_json["files"]))
+        self.assertEqual("test.txt", res_update_json["files"][0]["filename"])
+        import hashlib
+        self.assertEqual(hashlib.md5(open(path, "rb").read()).hexdigest(), res_update_json["files"][0]["checksum"])
+
+        res_publish = self.zenodo.publish(deposition_id=deposition_id)
+        res_publish_json = res_publish.json()
+
+        self.assertEqual(True, res_publish_json["submitted"])
+        self.assertEqual("done", res_publish_json["state"])
+        self.assertEqual(data.title, res_publish_json["metadata"]["title"])
 
     def test_update_metadata(self):
-        """Test updateing metadata only without changing files and keeping the version."""
+        """Test updateing (partial) metadata with/without new versions."""
+        data = Metadata(
+            title="Test Metadata",
+            upload_type="dataset",
+            description="test description",
+            publication_date="2022-02-22",
+            creators=[
+                Creator(
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                    orcid="0000-0003-4423-4370",
+                ),
+            ],
+            version="v1"
+        )
+        path = self.directory.joinpath("test.txt")
+        path.write_text("it's all metadata after this")
 
-        # TODO add test
+        res = self.zenodo.create(data=data, paths=[path])
+        res_create_json = res.json()
+        deposition_id = res_create_json["id"]
+
+        self.assertEqual(data.version, res_create_json["metadata"]["version"])
+
+        new_data = Metadata(
+            title="New and better Test Metadata",
+            upload_type=data.upload_type,
+            description=data.description,
+            creators=data.creators
+        )
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("done", res_update_json["state"])
+        self.assertEqual(data.description, res_update_json["metadata"]["description"]) # unchanged, but must still be present
+        self.assertEqual(new_data.title, res_update_json["metadata"]["title"])
+        self.assertEqual(data.version, res_create_json["metadata"]["version"])
+        
+        new_data.upload_type="poster"
+        new_data.version="v2.3"
+        
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data, publish=False)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("inprogress", res_update_json["state"])
+        self.assertEqual(new_data.upload_type, res_update_json["metadata"]["upload_type"])
+        self.assertEqual(new_data.version, res_update_json["metadata"]["version"])
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data, publish=True)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("done", res_update_json["state"])
+        self.assertEqual(data.version, res_update_json["metadata"]["version"])
