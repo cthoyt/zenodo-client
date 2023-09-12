@@ -156,7 +156,6 @@ class Zenodo:
         logger.info("publishing files to deposition %s", deposition_id)
         return self.publish(deposition_id)
 
-
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
         """Publish a record that's in edit mode.
 
@@ -246,7 +245,6 @@ class Zenodo:
         # Send the publish command
         return self.publish(new_deposition_id)
 
-
     def update_metadata(
         self,
         deposition_id: str,
@@ -301,7 +299,6 @@ class Zenodo:
 
         return self.publish(deposition_id)
 
-
     def _upload_files(self, *, bucket: str, paths: Paths) -> List[requests.Response]:
         _paths = [paths] if isinstance(paths, (str, Path)) else paths
         rv = []
@@ -335,9 +332,7 @@ class Zenodo:
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
         return latest
 
-    def download(
-        self, record_id: Union[int, str], name: str, *, force: bool = False, parts: Optional[PartsHint] = None
-    ) -> Path:
+    def download(self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None) -> Path:
         """Download the file for the given record.
 
         :param record_id: The Zenodo record id
@@ -386,12 +381,7 @@ class Zenodo:
         return pystow.ensure(*parts, name=name, url=url, force=force)
 
     def download_latest(
-        self,
-        record_id: Union[int, str],
-        name: str,
-        *,
-        force: bool = False,
-        parts: Optional[PartsHint] = None,
+        self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None
     ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
