@@ -42,22 +42,14 @@ def create_zenodo(data: Data, paths: Paths, publish: bool = False, **kwargs) -> 
     return Zenodo(**kwargs).create(data, paths, publish)
 
 
-def update_zenodo(
-    deposition_id: str, paths: Paths, publish: bool = True, **kwargs
-) -> requests.Response:
+def update_zenodo(deposition_id: str, paths: Paths, publish: bool = True, **kwargs) -> requests.Response:
     """Update the files in a Zenodo record."""
-    return Zenodo(**kwargs).update(deposition_id=deposition_id,
-                                   paths=paths,
-                                   publish=publish)
+    return Zenodo(**kwargs).update(deposition_id=deposition_id, paths=paths, publish=publish)
 
 
-def update__metadata_zenodo(
-    deposition_id: str, data: Metadata, publish: bool = True, **kwargs
-) -> requests.Response:
+def update__metadata_zenodo(deposition_id: str, data: Metadata, publish: bool = True, **kwargs) -> requests.Response:
     """Update the metadata of a Zenodo record."""
-    return Zenodo(**kwargs).update_metadata(deposition_id=deposition_id,
-                                            data=data,
-                                            publish=publish)
+    return Zenodo(**kwargs).update_metadata(deposition_id=deposition_id, data=data, publish=publish)
 
 
 def publish_zenodo(deposition_id: str, sleep: bool = True, **kwargs) -> requests.Response:
@@ -180,7 +172,7 @@ class Zenodo:
         )
         res.raise_for_status()
         return res
-    
+
     def edit(self, deposition_id: str, sleep: bool = True) -> requests.Response:
         """Unlock already submitted deposition for editing.
 
@@ -198,12 +190,7 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(
-        self,
-        deposition_id: str,
-        paths: Paths,
-        publish: bool = True
-    ) -> requests.Response:
+    def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files.
 
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
@@ -222,7 +209,7 @@ class Zenodo:
 
         # Parse out the new version (@zenodo please give this as its own field!)
         new_deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
-        
+
         # Get all metadata associated with the new version (this has updated DOIs, etc.)
         # see: https://developers.zenodo.org/#retrieve
         res = requests.get(
@@ -231,7 +218,7 @@ class Zenodo:
         )
         res.raise_for_status()
         new_deposition_data = res.json()
-        
+
         # Update the version and date
         new_deposition_data["metadata"]["version"] = _prepare_new_version(new_deposition_data["metadata"]["version"])
         new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
@@ -290,10 +277,10 @@ class Zenodo:
 
         deposition_data = res.json()
 
-        if(deposition_data["submitted"]): # Start editing mode
+        if deposition_data["submitted"]:  # Start editing mode
             res = self.edit(deposition_id)
             res.raise_for_status()
-            deposition_data = res.json() 
+            deposition_data = res.json()
 
         # Merge metadata
         deposition_data = deposition_data | data
@@ -406,6 +393,7 @@ class Zenodo:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
         return self.download(latest_record_id, name=name, force=force, parts=parts)
+
 
 def _prepare_new_version(old_version: str) -> str:
     new_version = datetime.datetime.today().strftime("%Y-%m-%d")
