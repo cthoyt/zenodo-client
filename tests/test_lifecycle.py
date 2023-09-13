@@ -169,7 +169,7 @@ class TestLifecycle(unittest.TestCase):
         res = self.zenodo.update(deposition_id=deposition_id, paths=[path], publish=False)
         res_update_json = res.json()
 
-        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324,S303
 
         self.assertEqual(False, res_update_json["submitted"])
         self.assertEqual("unsubmitted", res_update_json["state"])
@@ -191,7 +191,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual("test.md", res_update_json["files"][1]["filename"])
         self.assertEqual(path_hash, res_update_json["files"][0]["checksum"])
 
-        path_hash_2 = hashlib.md5(open(path, "rb").read()).hexdigest()  # noqa:S324
+        path_hash_2 = hashlib.md5(open(path, "rb").read()).hexdigest()  # noqa:S324,S303
         self.assertEqual(path_hash_2, res_update_json["files"][1]["checksum"])
 
         data.title = "Test Publication with Metadata Update"
@@ -236,7 +236,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(1, len(res_update_json["files"]))
         self.assertEqual("test.txt", res_update_json["files"][0]["filename"])
 
-        path_hash_3 = hashlib.md5(open(path, "rb").read()).hexdigest()  # noqa:S324
+        path_hash_3 = hashlib.md5(open(path, "rb").read()).hexdigest()  # noqa:S324,S303
         self.assertEqual(path_hash_3, res_update_json["files"][0]["checksum"])
 
         res_publish = self.zenodo.publish(deposition_id=deposition_id)
