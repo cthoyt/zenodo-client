@@ -37,7 +37,7 @@ def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Resp
     return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
-def create_zenodo(data: Data, paths: Paths, *, publish: bool = False, **kwargs) -> requests.Response:
+def create_zenodo(data: Data, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
     """Create a Zenodo record."""
     return Zenodo(**kwargs).create(data, paths, publish=publish)
 
@@ -59,12 +59,12 @@ def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs) -> reque
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
     """Download a Zenodo record."""
-    return Zenodo(**kwargs).download(record_id=record_id, name=name, force=force)
+    return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
 
 
-def download_zenodo_latest(record_id: str, path: str, force: bool = False, **kwargs) -> Path:
+def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
     """Download the latest Zenodo record."""
-    return Zenodo(**kwargs).download_latest(record_id=record_id, name=path, force=force)
+    return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
 
 
 class Zenodo:
@@ -258,12 +258,12 @@ class Zenodo:
         )
         res.raise_for_status()
 
-        if publish:
-            # Send the publish command
-            return self.publish(new_deposition_id)
-        else:
+        if not publish:
             # Return the response with latest metadata
             return res
+
+        # Send the publish command
+        return self.publish(new_deposition_id)
 
     def update_metadata(
         self,
@@ -407,7 +407,7 @@ class Zenodo:
         name: str,
         *,
         force: bool = False,
-        parts: PartsHint = None,
+        parts: PartsHint = None
     ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
