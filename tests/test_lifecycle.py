@@ -16,7 +16,7 @@ TEXT_V1 = "this is some test text\noh yeah baby"
 TEXT_V2 = "this is some v2 test text\noh yeah baby"
 TEXT_V3 = "this is some v3 test text\noh yeah baby"
 
-ACCESS_TOKEN = pystow.get_config("zenodo", "sandbox_api_token")
+ACCESS_TOKEN = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config("zenodo:sandbox", "api_token")
 
 
 @unittest.skipUnless(ACCESS_TOKEN, reason="Missing Zenodo sandbox API token")
