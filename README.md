@@ -164,15 +164,16 @@ paths = [
 ]
 
 # Add files
-res = update_zenodo(deposition_id=res["deposition_id"], paths=paths)
+res = update_zenodo(deposition_id=res.json()["id"], paths=paths, publish = False)
 pprint(res.json())
 
 # Update metadata (can also be combined with publish)
 data.description='corrected test description'
-res = update_metadata_zenodo(deposition_id=res["deposition_id"], data=data)
+res = update_metadata_zenodo(deposition_id=res.json()["id"], data=data, publish = False)
 pprint(res.json())
 
-res = publish_zenodo(deposition_id=res["deposition_id"])
+# Now check in Zenodo and publish there, or continue with
+res = publish_zenodo(deposition_id=res.json()["id"])
 pprint(res.json())
 ```
 
