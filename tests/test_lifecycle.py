@@ -159,7 +159,7 @@ class TestLifecycle(unittest.TestCase):
         deposition_id = res_create_json["id"]
 
         self.assertEqual(False, res_create_json["submitted"])
-        self.assertEqual("submitted", res_create_json["state"])
+        self.assertEqual("unsubmitted", res_create_json["state"])
         self.assertEqual(0, len(res_create_json["files"]))
 
         path = self.directory.joinpath("test.txt")
@@ -204,22 +204,24 @@ class TestLifecycle(unittest.TestCase):
         res = self.zenodo.create(data=data, paths=[path], publish=False)
         res_create_json = res.json()
         deposition_id = res_create_json["id"]
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324,S303
+        self.assertEqual(path_hash, res_create_json["files"][0]["checksum"])
 
         data.title = "Test Upload with an Update to Unpublished Deposition"
 
-        path2 = self.directory.joinpath("test2.txt")
-        path2.write_text("it's all metadata after this")
-        res = self.zenodo.update(deposition_id=deposition_id, data=data, publish=False)
+        path_2 = self.directory.joinpath("test2.txt")
+        path_2.write_text("it's all metadata after this")
+        res = self.zenodo.update(deposition_id=deposition_id, paths=[path_2], publish=False)
         res_update_json = res.json()
 
         self.assertEqual(False, res_update_json["submitted"])
         self.assertEqual("unsubmitted", res_update_json["state"])
         self.assertEqual(2, len(res_update_json["files"]))
-        self.assertEqual("test.txt", res_update_json["files"][0]["filename"])
-        self.assertEqual("test2.txt", res_update_json["files"][1]["checksum"])
+        self.assertEqual("test.txt", res_update_json["files"][1]["filename"])
+        self.assertEqual("test2.txt", res_update_json["files"][0]["filename"])
 
-        path_hash_2 = hashlib.md5(path2.read_bytes()).hexdigest()  # noqa:S324,S303
-        self.assertEqual(path_hash_2, res_update_json["files"][1]["checksum"])
+        path_hash_2 = hashlib.md5(path_2.read_bytes()).hexdigest()  # noqa:S324,S303
+        self.assertEqual(path_hash_2, res_update_json["files"][0]["checksum"])
 
         data.title = "Test Publication with Metadata Update"
         res = self.zenodo.update_metadata(deposition_id=deposition_id, data=data, publish=True)

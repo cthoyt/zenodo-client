@@ -402,12 +402,7 @@ class Zenodo:
         return pystow.ensure(*parts, name=name, url=url, force=force)
 
     def download_latest(
-        self,
-        record_id: Union[int, str],
-        name: str,
-        *,
-        force: bool = False,
-        parts: PartsHint = None
+        self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None
     ) -> Path:
         """Download the latest version of the file."""
         latest_record_id = self.get_latest_record(record_id)
