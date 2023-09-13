@@ -20,6 +20,7 @@ __all__ = [
     "create_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
+    "update_metadata_zenodo",
     "Zenodo",
 ]
 
