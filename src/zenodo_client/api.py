@@ -59,12 +59,12 @@ def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs) -> reque
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
     """Download a Zenodo record."""
-    return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
+    return Zenodo(**kwargs).download(record_id=record_id, name=name, force=force)
 
 
-def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
+def download_zenodo_latest(record_id: str, path: str, force: bool = False, **kwargs) -> Path:
     """Download the latest Zenodo record."""
-    return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
+    return Zenodo(**kwargs).download_latest(record_id=record_id, name=path, force=force)
 
 
 class Zenodo:
@@ -190,7 +190,7 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, paths: Paths, *, publish: bool = True) -> requests.Response:
+    def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files.
 
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
@@ -198,38 +198,52 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-        # Prepare a new version based on the old version
-        # see: https://developers.zenodo.org/#new-version)
-        res = requests.post(
-            f"{self.depositions_base}/{deposition_id}/actions/newversion",
-            params={"access_token": self.access_token},
-        )
-        res.raise_for_status()
-
-        # Parse out the new version (@zenodo please give this as its own field!)
-        new_deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
-
-        # Get all metadata associated with the new version (this has updated DOIs, etc.)
-        # see: https://developers.zenodo.org/#retrieve
+        # Get current metadata
         res = requests.get(
-            f"{self.depositions_base}/{new_deposition_id}",
+            f"{self.depositions_base}/{deposition_id}",
             params={"access_token": self.access_token},
         )
         res.raise_for_status()
-        new_deposition_data = res.json()
+        deposition_data = res.json()
 
-        # Update the version and date
-        new_deposition_data["metadata"]["version"] = _prepare_new_version(new_deposition_data["metadata"]["version"])
-        new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
+        if deposition_data["submitted"]:
+            # Prepare a new version based on the old version
+            # see: https://developers.zenodo.org/#new-version)
+            res = requests.post(
+                f"{self.depositions_base}/{deposition_id}/actions/newversion",
+                params={"access_token": self.access_token},
+            )
+            res.raise_for_status()
 
-        # Update the deposition for the new version
-        # see: https://developers.zenodo.org/#update
-        res = requests.put(
-            f"{self.depositions_base}/{new_deposition_id}",
-            json=new_deposition_data,
-            params={"access_token": self.access_token},
-        )
-        res.raise_for_status()
+            # Parse out the new version (@zenodo please give this as its own field!)
+            new_deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
+
+            # Get all metadata associated with the new version (this has updated DOIs, etc.)
+            # see: https://developers.zenodo.org/#retrieve
+            res = requests.get(
+                f"{self.depositions_base}/{new_deposition_id}",
+                params={"access_token": self.access_token},
+            )
+            res.raise_for_status()
+            new_deposition_data = res.json()
+
+            # Update the version and date
+            new_deposition_data["metadata"]["version"] = _prepare_new_version(
+                new_deposition_data["metadata"]["version"]
+            )
+            new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
+
+            # Update the deposition for the new version
+            # see: https://developers.zenodo.org/#update
+            res = requests.put(
+                f"{self.depositions_base}/{new_deposition_id}",
+                json=new_deposition_data,
+                params={"access_token": self.access_token},
+            )
+            res.raise_for_status()
+        else:
+            new_deposition_id = deposition_data["id"]
+            new_deposition_data = deposition_data
 
         bucket = new_deposition_data["links"]["bucket"]
 
@@ -237,18 +251,24 @@ class Zenodo:
         #  there will be no update
         self._upload_files(bucket=bucket, paths=paths)
 
-        if not publish:
+        # Get the new metadata with the files
+        res = requests.get(
+            f"{self.depositions_base}/{deposition_id}",
+            params={"access_token": self.access_token},
+        )
+        res.raise_for_status()
+
+        if publish:
+            # Send the publish command
+            return self.publish(new_deposition_id)
+        else:
             # Return the response with latest metadata
             return res
-
-        # Send the publish command
-        return self.publish(new_deposition_id)
 
     def update_metadata(
         self,
         deposition_id: str,
         data: Data,
-        *,
         publish: bool = True,
         # new_version only is given to updaes where files change!
     ) -> requests.Response:
@@ -276,7 +296,9 @@ class Zenodo:
 
         deposition_data = res.json()
 
-        if deposition_data["submitted"]:  # Start editing mode
+        if (
+            deposition_data["submitted"] and deposition_data["state"] != "inprogress"
+        ):  # Start editing mode unless is is already started
             res = self.edit(deposition_id)
             res.raise_for_status()
             deposition_data = res.json()
