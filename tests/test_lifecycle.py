@@ -36,6 +36,8 @@ class TestLifecycle(unittest.TestCase):
     def setUp(self) -> None:
         """Set up the test case with a zenodo client."""
         self.zenodo = Zenodo(sandbox=True)
+        self.assertIsInstance(self.zenodo.access_token, str)
+        self.assertNotEqual("", self.zenodo.access_token)
         self.key = f"test-{uuid4()}"
         self._directory = tempfile.TemporaryDirectory()
         self.directory = Path(self._directory.name).resolve()
