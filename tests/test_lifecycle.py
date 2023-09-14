@@ -17,6 +17,12 @@ TEXT_V2 = "this is some v2 test text\noh yeah baby"
 TEXT_V3 = "this is some v3 test text\noh yeah baby"
 
 ACCESS_TOKEN = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config("zenodo:sandbox", "api_token")
+CREATOR = Creator(
+    name="Hoyt, Charles Tapley",
+    affiliation="Harvard Medical School",
+    orcid="0000-0003-4423-4370",
+    gnd="1203140533",
+)
 
 
 @unittest.skipUnless(ACCESS_TOKEN, reason="Missing Zenodo sandbox API token")
@@ -30,6 +36,9 @@ class TestLifecycle(unittest.TestCase):
         self._directory = tempfile.TemporaryDirectory()
         self.directory = Path(self._directory.name).resolve()
 
+        self.path = self.directory.joinpath("test.txt")
+        self.path.write_text(TEXT_V1)
+
     def tearDown(self) -> None:
         """Tear down the test case."""
         self._directory.cleanup()
@@ -40,26 +49,12 @@ class TestLifecycle(unittest.TestCase):
             title="Test Upload",
             upload_type="dataset",
             description="test description",
-            creators=[
-                Creator(
-                    name="Hoyt, Charles Tapley",
-                    affiliation="Harvard Medical School",
-                    orcid="0000-0003-4423-4370",
-                ),
-            ],
+            creators=[CREATOR],
         )
-        path = self.directory.joinpath("test.txt")
-        path.write_text(TEXT_V1)
 
-        logger.info(f"wrote data to {path}")
-        res = self.zenodo.ensure(
-            key=self.key,
-            data=data,
-            paths=path,
-        )
+        res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
         res_json = res.json()
         # print(f"\n\nSEE V1 ON ZENODO: {res_json['links']['record_html']}")
-
         self.assertEqual(True, res_json["submitted"])
         self.assertEqual("done", res_json["state"])
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
@@ -68,15 +63,15 @@ class TestLifecycle(unittest.TestCase):
 
         deposition_id = res_json["record_id"]
         # print(f"DEPOSITION ID: {deposition_id}")
-        path.write_text(TEXT_V2)
+        self.path.write_text(TEXT_V2)
 
-        res = self.zenodo.update(deposition_id, paths=path)
+        res = self.zenodo.update(deposition_id, paths=self.path)
         res_json = res.json()
         # print(f"SEE V2 ON ZENODO: {res_json['links']['record_html']}")
         self.assertEqual(f"{data.version}-1", res_json["metadata"]["version"])
 
-        path.write_text(TEXT_V3)
-        res = self.zenodo.update(deposition_id, paths=path)
+        self.path.write_text(TEXT_V3)
+        res = self.zenodo.update(deposition_id, paths=self.path)
         res_json = res.json()
         # print(f"SEE V3 ON ZENODO: {res_json['links']['record_html']}")
         self.assertEqual(f"{data.version}-2", res_json["metadata"]["version"])
@@ -94,18 +89,10 @@ class TestLifecycle(unittest.TestCase):
                 ),
             ],
         )
-        path = self.directory.joinpath("test.txt")
-        path.write_text(TEXT_V1)
 
-        logger.info(f"wrote data to {path}")
-        res = self.zenodo.ensure(
-            key=self.key,
-            data=data,
-            paths=path,
-        )
+        res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
         res_json = res.json()
         # print(f"\n\nSEE V1 ON ZENODO: {res_json['links']['record_html']}")
-
         self.assertEqual(True, res_json["submitted"])
         self.assertEqual("done", res_json["state"])
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
