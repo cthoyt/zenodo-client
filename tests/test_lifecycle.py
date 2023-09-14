@@ -9,6 +9,7 @@ from uuid import uuid4
 import requests
 
 from zenodo_client import Creator, Metadata, Zenodo
+from zenodo_client.struct import Community
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,9 @@ class TestLifecycle(unittest.TestCase):
             upload_type="dataset",
             description="test description",
             creators=[CREATOR],
+            communities=[Community(identifier="zenodo"), Community(identifier="bioinformatics")],
+            keywords=["key1", "key2", "key3"],
+            notes="this is important",
         )
 
         res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
@@ -64,6 +68,9 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
         self.assertEqual(data.title, res_json["metadata"]["title"])
         self.assertEqual(data.version, res_json["metadata"]["version"])
+        self.assertEqual({"zenodo", "bioinformatics"}, {c["identifier"] for c in res_json["metadata"]["communities"]})
+        self.assertEqual(data.keywords, res_json["metadata"]["keywords"])
+        self.assertEqual(data.notes, res_json["metadata"]["notes"])
 
         deposition_id = res_json["record_id"]
         # print(f"DEPOSITION ID: {deposition_id}")
