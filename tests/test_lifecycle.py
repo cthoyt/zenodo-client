@@ -16,22 +16,25 @@ TEXT_V1 = "this is some test text\noh yeah baby"
 TEXT_V2 = "this is some v2 test text\noh yeah baby"
 TEXT_V3 = "this is some v3 test text\noh yeah baby"
 
-ACCESS_TOKEN = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config("zenodo:sandbox", "api_token")
 CREATOR = Creator(
     name="Hoyt, Charles Tapley",
-    affiliation="Harvard Medical School",
+    affiliation="Northeastern University",
     orcid="0000-0003-4423-4370",
     gnd="1203140533",
 )
 
 
-@unittest.skipUnless(ACCESS_TOKEN, reason="Missing Zenodo sandbox API token")
 class TestLifecycle(unittest.TestCase):
     """Test case for zenodo client."""
 
     def setUp(self) -> None:
         """Set up the test case with a zenodo client."""
-        self.zenodo = Zenodo(sandbox=True, access_token=ACCESS_TOKEN)
+        access_token = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config(
+            "zenodo:sandbox", "api_token"
+        )
+        self.assertIsNotNone(access_token)
+
+        self.zenodo = Zenodo(sandbox=True, access_token=access_token)
         self.key = f"test-{uuid4()}"
         self._directory = tempfile.TemporaryDirectory()
         self.directory = Path(self._directory.name).resolve()
