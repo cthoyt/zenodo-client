@@ -123,6 +123,8 @@ class Zenodo:
             json=data,
             params={"access_token": self.access_token},
         )
+        if res.status_code == 400:
+            raise ValueError(res.text)
         res.raise_for_status()
 
         res_json = res.json()
