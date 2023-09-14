@@ -7,6 +7,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pystow
+import requests
 
 from zenodo_client import Creator, Metadata, Zenodo
 
@@ -29,12 +30,12 @@ class TestLifecycle(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up the test case with a zenodo client."""
-        access_token = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config(
+        self.access_token = pystow.get_config("zenodo", "sandbox_api_token") or pystow.get_config(
             "zenodo:sandbox", "api_token"
         )
-        self.assertIsNotNone(access_token)
+        self.assertIsNotNone(self.access_token)
 
-        self.zenodo = Zenodo(sandbox=True, access_token=access_token)
+        self.zenodo = Zenodo(sandbox=True, access_token=self.access_token)
         self.key = f"test-{uuid4()}"
         self._directory = tempfile.TemporaryDirectory()
         self.directory = Path(self._directory.name).resolve()
@@ -45,6 +46,11 @@ class TestLifecycle(unittest.TestCase):
     def tearDown(self) -> None:
         """Tear down the test case."""
         self._directory.cleanup()
+
+    def test_connect(self):
+        """Test connection works."""
+        r = requests.get(self.zenodo.depositions_base, params={"access_token": self.access_token})
+        self.assertEqual(200, r.status_code, msg=r.text)
 
     def test_create(self):
         """Test creating a record."""
