@@ -86,32 +86,19 @@ class TestLifecycle(unittest.TestCase):
             title="Test Upload",
             upload_type="publication",
             description="test description",
-            creators=[
-                Creator(
-                    name="Hoyt, Charles Tapley",
-                    affiliation="Harvard Medical School",
-                    orcid="0000-0003-4423-4370",
-                    gnd="1203140533",
-                ),
-            ],
+            creators=[CREATOR],
             access_right="embargoed",
             language="ger",
             version="ver1",
             license="my-own-license",
             publication_type="patent",
-            #image_type="figure",
+            # image_type="figure",
             communities=["zenodo", "bioinformatics"],
             keywords=["key1", "key2", "key3"],
             notes="this is important",
         )
-        path = self.directory.joinpath("test.txt")
-        path.write_text(TEXT_V1)
 
-        res = self.zenodo.ensure(
-            key=self.key,
-            data=data,
-            paths=path,
-        )
+        res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
         res_json = res.json()
 
         self.assertEqual(data.title, res_json["metadata"]["title"])
