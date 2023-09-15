@@ -1,7 +1,7 @@
 """Tests for the upload and revision lifecyle."""
 
-import hashlib
 import datetime
+import hashlib
 import logging
 import tempfile
 import unittest
