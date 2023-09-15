@@ -139,6 +139,23 @@ class Zenodo:
         logger.info("publishing files to deposition %s", deposition_id)
         return self.publish(deposition_id)
 
+    def edit(self, deposition_id: str, sleep: bool = True) -> requests.Response:
+        """Unlock already submitted deposition for editing.
+
+        :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
+        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
+            might be able to get away with disabling this.
+        :return: The response JSON from the Zenodo API
+        """
+        if sleep:
+            time.sleep(1)
+        res = requests.post(
+            f"{self.depositions_base}/{deposition_id}/actions/edit",
+            params={"access_token": self.access_token},
+        )
+        res.raise_for_status()
+        return res
+
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
         """Publish a record that's in edit mode.
 
