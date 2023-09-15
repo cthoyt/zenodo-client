@@ -157,7 +157,12 @@ class Zenodo:
         return res
 
     def update(self, deposition_id: str, paths: Paths) -> requests.Response:
-        """Create a new version of the given record with the given files."""
+        """Update a record, including creating a new version of the given record, with the given files.
+
+        :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
+        :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
+        :return: The response JSON from the Zenodo API
+        """
         # Prepare a new version based on the old version
         # see: https://developers.zenodo.org/#new-version)
         res = requests.post(
