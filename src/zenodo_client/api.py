@@ -193,6 +193,8 @@ class Zenodo:
         deposition_data = res.json()
 
         if deposition_data["submitted"]:
+            # TODO @dnüst split this out into a helper function
+
             # Prepare a new version based on the old version
             # see: https://developers.zenodo.org/#new-version)
             res = requests.post(
