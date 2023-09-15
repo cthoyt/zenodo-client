@@ -7,7 +7,7 @@ import logging
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, Sequence, Union
 
 import pystow
 import requests
@@ -160,26 +160,52 @@ class Zenodo:
         return self.publish(deposition_id)
 
     def edit(self, deposition_id: str, sleep: bool = True) -> requests.Response:
-        """Unlock already submitted deposition for editing.
+        """Unlock already submitted deposition for editing, see https://developers.zenodo.org/#edit.
 
-        :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
+        :param deposition_id: The identifier of the deposition on Zenodo.
         :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
             might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
-        if sleep:
-            time.sleep(1)
-        res = requests.post(
-            f"{self.depositions_base}/{deposition_id}/actions/edit",
-            params={"access_token": self.access_token},
-        )
-        res.raise_for_status()
-        return res
+        return self._action(deposition_id=deposition_id, action="edit", sleep=sleep)
 
     def publish(self, deposition_id: str, sleep: bool = True) -> requests.Response:
-        """Publish a record that's in edit mode.
+        """Publish a record that's in edit mode, see https://developers.zenodo.org/#publish.
+
+        :param deposition_id: The identifier of the deposition on Zenodo.
+        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
+            might be able to get away with disabling this.
+        :return: The response JSON from the Zenodo API
+        """
+        return self._action(deposition_id=deposition_id, action="publish", sleep=sleep)
+
+    def discard(self, deposition_id: str, sleep: bool = True) -> requests.Response:
+        """Discard changes in the current editing session., see https://developers.zenodo.org/#discard.
+
+        :param deposition_id: The identifier of the deposition on Zenodo.
+        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
+            might be able to get away with disabling this.
+        :return: The response JSON from the Zenodo API
+        """
+        return self._action(deposition_id=deposition_id, action="discard", sleep=sleep)
+
+    def new_version(self, deposition_id: str, sleep: bool = True) -> requests.Response:
+        """Create a new version of a deposition, see https://developers.zenodo.org/#new-version.
+
+        :param deposition_id: The identifier of the deposition on Zenodo.
+        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
+            might be able to get away with disabling this.
+        :return: The response JSON from the Zenodo API
+        """
+        return self._action(deposition_id=deposition_id, action="newversion", sleep=sleep)
+
+    def _action(
+        self, deposition_id: str, action: Literal["discard", "publish", "newversion", "edit"], sleep: bool = True
+    ) -> requests.Response:
+        """Run an action on a record.
 
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
+        :param action: The action to perform
         :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
             might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
@@ -187,7 +213,7 @@ class Zenodo:
         if sleep:
             time.sleep(1)
         res = requests.post(
-            f"{self.depositions_base}/{deposition_id}/actions/publish",
+            f"{self.depositions_base}/{deposition_id}/actions/{action}",
             params={"access_token": self.access_token},
         )
         res.raise_for_status()
@@ -201,7 +227,6 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-        # Get current metadata
         res = requests.get(
             f"{self.depositions_base}/{deposition_id}",
             params={"access_token": self.access_token},
@@ -211,14 +236,7 @@ class Zenodo:
 
         if deposition_data["submitted"]:
             # TODO @dnüst split this out into a helper function
-
-            # Prepare a new version based on the old version
-            # see: https://developers.zenodo.org/#new-version)
-            res = requests.post(
-                f"{self.depositions_base}/{deposition_id}/actions/newversion",
-                params={"access_token": self.access_token},
-            )
-            res.raise_for_status()
+            res = self.new_version(deposition_id, sleep=False)
 
             # Parse out the new version (@zenodo please give this as its own field!)
             new_deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
