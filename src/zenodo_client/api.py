@@ -413,6 +413,7 @@ class Zenodo:
 
 
 def _prepare_new_version(old_version: str) -> str:
+    # FIXME handle if original version wasn't a date
     new_version = datetime.datetime.today().strftime("%Y-%m-%d")
     if old_version == new_version:
         new_version += "-1"

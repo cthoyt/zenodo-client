@@ -3,7 +3,7 @@
 """Data structures for Zenodo."""
 
 import datetime
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
@@ -108,6 +108,12 @@ def _today_str() -> str:
     return datetime.datetime.today().strftime("%Y-%m-%d")
 
 
+class Community(BaseModel):
+    """A simple model representing a community."""
+
+    identifier: str
+
+
 class Metadata(BaseModel):
     """Metadata for the Zenodo deposition API."""
 
@@ -121,14 +127,22 @@ class Metadata(BaseModel):
     license: Optional[str] = "CC0-1.0"
     publication_type: Optional[PublicationType] = None
     image_type: Optional[ImageType] = None
+    communities: List[Community] = Field(default_factory=list)
+    keywords: List[str] = Field(default_factory=list)
+    notes: Optional[str] = None
+    embargo_date: Optional[str] = None
 
     def __post_init__(self):  # noqa:D105
         if self.upload_type == "publication":
             if self.publication_type is None:
                 raise ValueError("missing publication_type")
+        if self.publication_type is not None and self.upload_type != "publication":
+            raise ValueError(f"Can't use publication_type with upload_type={self.upload_type}. Need publication.")
         elif self.upload_type == "image":
             if self.image_type is None:
                 raise ValueError("missing image_type")
         if self.access_right in {"open", "embargoed"}:
             if self.license is None:
                 raise ValueError(f"need a license for access_right={self.access_right}")
+        if self.access_right == "embargoed" and self.embargo_date is None:
+            raise ValueError("Missing embargo date")
