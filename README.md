@@ -126,14 +126,14 @@ OOH_NA_NA_RECORD = '4020486'
 new_record = zenodo.download_latest(OOH_NA_NA_RECORD, 'names.tsv.gz')
 ```
 
-The following example creates a new deposit for a record and uses the prereserved DOI before uploading files but does not publish the record, allowing manual editing in the Zenodo UI.
+The following example updates the metadata for a published deposit.
 
 ```python
 from zenodo_client import Creator, Metadata, create_zenodo, upload_zenodo
 
 # Define the metadata that will be used on initial upload
 data = Metadata(
-    title='Test Upload 3',
+    title='Test Upload 4',
     upload_type='dataset',
     description='test description',
     creators=[
@@ -149,31 +149,14 @@ res = create_zenodo(
     data=data,
     sandbox=True,
     paths=[],
-    publish=False
 )
 
 from pprint import pprint
 pprint(res.json())
 
-# Create a file using the expected DOI
-with open('file.txt', 'w') as file:  
-    file.writelines(res.json()["metadata"]["prereserve_doi"]["doi"])
-
-paths = [
-    os.path.join(os.getcwd(), 'file.txt),
-]
-
-# Add files
-res = update_zenodo(deposition_id=res.json()["id"], paths=paths, publish = False)
-pprint(res.json())
-
-# Update metadata (can also be combined with publish)
+# Update metadata
 data.description='corrected test description'
-res = update_metadata_zenodo(deposition_id=res.json()["id"], data=data, publish = False)
-pprint(res.json())
-
-# Now check in Zenodo and publish there, or continue with
-res = publish_zenodo(deposition_id=res.json()["id"])
+res = update_metadata_zenodo(deposition_id=res.json()["id"], data=data)
 pprint(res.json())
 ```
 
