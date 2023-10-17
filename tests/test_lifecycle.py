@@ -133,7 +133,7 @@ class TestLifecycle(unittest.TestCase):
         data = Metadata(
             title="Test Upload",
             upload_type="dataset",
-            description="test description",
+            description="Test create without publishing",
             creators=[
                 Creator(
                     name="Hoyt, Charles Tapley",
@@ -145,7 +145,22 @@ class TestLifecycle(unittest.TestCase):
 
         res = self.zenodo.create(data=data, paths=[], publish=False)
         res_create_json = res.json()
+        deposition_id = res_create_json["id"]
 
         self.assertEqual(False, res_create_json["submitted"])
         self.assertEqual("unsubmitted", res_create_json["state"])
         self.assertEqual(0, len(res_create_json["files"]))
+
+        path = self.directory.joinpath("doi.txt")
+        path.write_text("this record will have DOI %s" % res_create_json["metadata"]["prereserve_doi"]["doi"])
+
+        res = self.zenodo.update(deposition_id, paths=[path], publish=False)
+        res_update_json = res.json()
+
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324,S303
+        self.assertEqual(path_hash, res_update_json["files"][0]["checksum"])
+        self.assertEqual(deposition_id, res_update_json["id"])
+
+        res = self.zenodo.publish(deposition_id=deposition_id)
+        res_publish_json = res.json()
+        self.assertEqual(deposition_id, res_publish_json["id"])

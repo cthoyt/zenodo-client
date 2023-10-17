@@ -18,6 +18,7 @@ __all__ = [
     "ensure_zenodo",
     "update_zenodo",
     "create_zenodo",
+    "publish_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
     "Zenodo",
@@ -229,7 +230,7 @@ class Zenodo:
         deposition_data = res.json()
 
         if deposition_data["submitted"]:
-            new_deposition_id, new_deposition_data = _update_submitted_deposition_metadata(deposition_id, res)
+            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id, res)
         else:
             new_deposition_id = deposition_data["id"]
             new_deposition_data = deposition_data
@@ -253,7 +254,7 @@ class Zenodo:
 
         # Send the publish command
         return self.publish(new_deposition_id)
-    
+
     def _update_submitted_deposition_metadata(self, deposition_id: str, res: requests.Response) -> tuple:
         res = self.new_version(deposition_id, sleep=False)
 
@@ -270,9 +271,7 @@ class Zenodo:
         new_deposition_data = res.json()
 
         # Update the version and date
-        new_deposition_data["metadata"]["version"] = _prepare_new_version(
-            new_deposition_data["metadata"]["version"]
-        )
+        new_deposition_data["metadata"]["version"] = _prepare_new_version(new_deposition_data["metadata"]["version"])
         new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
 
         # Update the deposition for the new version
