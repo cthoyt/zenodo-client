@@ -280,7 +280,7 @@ class Zenodo:
         :param record_id: The Zenodo record id
         :param name: The name of the file in the Zenodo record
         :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
-            ``<PYSTOW_HOME>/zendoo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
+            ``<PYSTOW_HOME>/zenodo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
             consistent concept record ID for all versions of the same record. If a function is given, the function
             should take 3 position arguments: concept record id, record id, and version, then return a sequence for
             PyStow. The name of the file is automatically appended to the end of the sequence.
