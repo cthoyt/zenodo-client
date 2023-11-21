@@ -270,7 +270,7 @@ class Zenodo:
         """Get the latest record related to the given record."""
         res_json = self.get_record(record_id).json()
         # Still works even in the case that the given record ID is the latest.
-        latest = res_json["links"]["latest"].split("/")[-1]
+        latest = res_json["links"]["latest"].split("/")[-3]
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
         return latest
 
