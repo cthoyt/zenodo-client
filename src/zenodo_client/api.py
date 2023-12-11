@@ -314,7 +314,7 @@ class Zenodo:
         """Get the latest record related to the given record."""
         res_json = self.get_record(record_id).json()
         # Still works even in the case that the given record ID is the latest.
-        latest = res_json["links"]["latest"].split("/")[-1]
+        latest = res_json["links"]["latest"].split("/")[-3]
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
         return latest
 
@@ -324,7 +324,7 @@ class Zenodo:
         :param record_id: The Zenodo record id
         :param name: The name of the file in the Zenodo record
         :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
-            ``<PYSTOW_HOME>/zendoo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
+            ``<PYSTOW_HOME>/zenodo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
             consistent concept record ID for all versions of the same record. If a function is given, the function
             should take 3 position arguments: concept record id, record id, and version, then return a sequence for
             PyStow. The name of the file is automatically appended to the end of the sequence.
