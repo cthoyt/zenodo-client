@@ -82,6 +82,13 @@ doctests. You can check that the unit tests pass with `tox -e py` and that the
 doctests pass with `tox -e doctests`. These tests are required to pass for
 accepting a contribution.
 
+Some extra notes:
+
+1. Run all tests with :code:`tox` (see below) or with `python -m pytest tests/`; run a specific test by
+   appending `-k <test function name>`.
+2. Tests need a Zenodo sandbox API token provided with a :code:`pystow` configuration (e.g., a
+   file `~/.config/zenodo.ini` with setting `sandbox_api_token`)
+
 ### Syncing your fork
 
 If other code is updated before your contribution gets merged, you might need to
