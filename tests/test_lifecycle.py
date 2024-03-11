@@ -63,7 +63,7 @@ class TestLifecycle(unittest.TestCase):
             embargo_date=(datetime.date.today() + datetime.timedelta(days=5)).strftime("%Y-%m-%d"),
             language="eng",
             # version="ver1",
-            license="CC-BY-4.0",
+            license="cc-by-4.0",
             publication_type="patent",
             # image_type="figure",
             communities=[Community(identifier="zenodo"), Community(identifier="bioinformatics")],
