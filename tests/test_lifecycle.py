@@ -96,7 +96,6 @@ class TestLifecycle(unittest.TestCase):
         # print(f"DEPOSITION ID: {deposition_id}")
         self.path.write_text(TEXT_V2)
 
-        print("DEPOSITION ID", deposition_v1_id)
         res_v2 = self.zenodo.update(deposition_v1_id, paths=self.path)
         res_v2_json = res_v2.json()
         deposition_v2_id = res_v2_json["id"]
