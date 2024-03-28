@@ -206,8 +206,13 @@ class Zenodo:
         :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
         :return: The response JSON from the Zenodo API
         """
-        res = self.new_version(deposition_id, sleep=False)
+        url = f"{self.depositions_base}/{deposition_id}"
+        res = requests.get(url, params={"access_token": self.access_token})
+        res.raise_for_status()
+        old_version = res.json()["metadata"]["version"]
+        new_version = _prepare_new_version(old_version)
 
+        res = self.new_version(deposition_id, sleep=False)
         # Parse out the new version (@zenodo please give this as its own field!)
         new_deposition_id = res.json()["links"]["latest_draft"].split("/")[-1]
 
@@ -220,14 +225,14 @@ class Zenodo:
         res.raise_for_status()
         new_deposition_data = res.json()
         # Update the version
-        new_deposition_data["metadata"]["version"] = _prepare_new_version(new_deposition_data["metadata"]["version"])
+        new_deposition_data["metadata"]["version"] = new_version
         new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
 
         # Update the deposition for the new version
         # see: https://developers.zenodo.org/#update
         res = requests.put(
             f"{self.depositions_base}/{new_deposition_id}",
-            json=new_deposition_data,
+            json={"metadata": new_deposition_data["metadata"]},
             params={"access_token": self.access_token},
         )
         res.raise_for_status()
