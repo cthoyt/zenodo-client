@@ -232,7 +232,7 @@ class Zenodo:
         # see: https://developers.zenodo.org/#update
         res = requests.put(
             f"{self.depositions_base}/{new_deposition_id}",
-            json=new_deposition_data,
+            json={"metadata": new_deposition_data["metadata"]},
             params={"access_token": self.access_token},
         )
         res.raise_for_status()
