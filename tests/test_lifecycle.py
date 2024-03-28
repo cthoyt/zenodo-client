@@ -70,6 +70,7 @@ class TestLifecycle(unittest.TestCase):
             keywords=["key1", "key2", "key3"],
             notes="this is important",
         )
+        self.assertIsNotNone(data.version, msg="When not given, version should be set to today's date")
 
         res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
         res_json = res.json()
@@ -85,25 +86,31 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.language, res_json["metadata"]["language"])
         self.assertEqual(data.license, res_json["metadata"]["license"])
         self.assertEqual(data.publication_type, res_json["metadata"]["publication_type"])
+        # FIXME bug in new zenodo - communities are not returned by creation endpoint
         # self.assertIn("communities", res_json["metadata"], msg=f"\nKeys: {set(res_json['metadata'])}")
         # self.assertEqual({"zenodo", "bioinformatics"}, {c["identifier"] for c in res_json["metadata"]["communities"]})
         self.assertEqual(data.keywords, res_json["metadata"]["keywords"])
         self.assertEqual(data.notes, res_json["metadata"]["notes"])
 
-        deposition_id = res_json["record_id"]
+        deposition_v1_id = str(res_json["record_id"])
         # print(f"DEPOSITION ID: {deposition_id}")
         self.path.write_text(TEXT_V2)
 
-        res = self.zenodo.update(deposition_id, paths=self.path)
-        res_json = res.json()
+        print("DEPOSITION ID", deposition_v1_id)
+        res_v2 = self.zenodo.update(deposition_v1_id, paths=self.path)
+        res_v2_json = res_v2.json()
+        deposition_v2_id = res_v2_json["id"]
         # print(f"SEE V2 ON ZENODO: {res_json['links']['record_html']}")
-        self.assertEqual(f"{data.version}-1", res_json["metadata"]["version"])
+        self.assertNotEqual(deposition_v1_id, deposition_v2_id)
+        self.assertEqual(f"{data.version}-1", res_v2_json["metadata"]["version"])
 
         self.path.write_text(TEXT_V3)
-        res = self.zenodo.update(deposition_id, paths=self.path)
-        res_json = res.json()
+        res_v3 = self.zenodo.update(deposition_v2_id, paths=self.path)
+        res_v3_json = res_v3.json()
         # print(f"SEE V3 ON ZENODO: {res_json['links']['record_html']}")
-        self.assertEqual(f"{data.version}-2", res_json["metadata"]["version"])
+        self.assertNotEqual(deposition_v1_id, res_v3_json["id"])
+        self.assertNotEqual(deposition_v2_id, res_v3_json["id"])
+        self.assertEqual(f"{data.version}-2", res_v3_json["metadata"]["version"])
 
     def test_create_no_orcid(self):
         """Test create with no ORCID."""
