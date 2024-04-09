@@ -1,6 +1,7 @@
 """Tests for the upload and revision lifecyle."""
 
 import datetime
+import hashlib
 import logging
 import tempfile
 import unittest
@@ -133,3 +134,67 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
         self.assertEqual(data.title, res_json["metadata"]["title"])
         self.assertEqual(data.version, res_json["metadata"]["version"])
+
+    def test_update_metadata(self):
+        """Test updating (partial) metadata with/without new versions."""
+        data = Metadata(
+            title="Test Metadata",
+            upload_type="dataset",
+            description="test description",
+            publication_date="2022-02-22",
+            creators=[
+                Creator(
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                    orcid="0000-0003-4423-4370",
+                ),
+            ],
+            version="v1",
+        )
+        path = self.directory.joinpath("test.txt")
+        path.write_text("it's all metadata after this")
+
+        res = self.zenodo.create(data=data, paths=[path])
+        res_create_json = res.json()
+        deposition_id = res_create_json["id"]
+
+        self.assertEqual(data.version, res_create_json["metadata"]["version"])
+
+        new_data = Metadata(
+            title="New and better Test Metadata",
+            upload_type=data.upload_type,
+            description=data.description,
+            creators=data.creators,
+        )
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("done", res_update_json["state"])
+        self.assertEqual(
+            data.description, res_update_json["metadata"]["description"]
+        )  # unchanged, but must still be present
+        self.assertEqual(new_data.title, res_update_json["metadata"]["title"])
+        self.assertEqual(data.version, res_create_json["metadata"]["version"])
+
+        new_data.upload_type = "poster"
+        new_data.version = "v2.3"
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data, publish=False)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("inprogress", res_update_json["state"])
+        self.assertEqual(new_data.upload_type, res_update_json["metadata"]["upload_type"])
+        self.assertEqual(new_data.version, res_update_json["metadata"]["version"])
+
+        res = self.zenodo.update_metadata(deposition_id=deposition_id, data=new_data, publish=True)
+        res_update_json = res.json()
+        deposition_id = res_update_json["id"]
+
+        self.assertEqual(True, res_update_json["submitted"])
+        self.assertEqual("done", res_update_json["state"])
+        self.assertEqual(new_data.version, res_update_json["metadata"]["version"])

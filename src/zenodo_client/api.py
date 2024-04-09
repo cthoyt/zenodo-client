@@ -20,6 +20,7 @@ __all__ = [
     "create_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
+    "update_metadata_zenodo",
     "Zenodo",
 ]
 
@@ -45,6 +46,11 @@ def create_zenodo(data: Data, paths: Paths, **kwargs) -> requests.Response:
 def update_zenodo(deposition_id: str, paths: Paths, **kwargs) -> requests.Response:
     """Update a Zenodo record."""
     return Zenodo(**kwargs).update(deposition_id, paths)
+
+
+def update_metadata_zenodo(deposition_id: str, data: Metadata, **kwargs) -> requests.Response:
+    """Update the metadata of a Zenodo record."""
+    return Zenodo(**kwargs).update_metadata(deposition_id, data)
 
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
@@ -245,6 +251,60 @@ class Zenodo:
 
         # Send the publish command
         return self.publish(new_deposition_id)
+
+    def update_metadata(
+        self,
+        deposition_id: str,
+        data: Data,
+        publish: bool = True,
+    ) -> requests.Response:
+        """Update a record, including creating a new version of the given record, with the given files and metadata.
+
+        :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
+        :param data: The metadata of the deposition that should be updated.
+        :param publish: Publish the deposition after the update.
+        :return: The response JSON from the Zenodo API
+        """
+        if isinstance(data, Metadata):
+            logger.debug("serializing metadata")
+            data = {
+                "metadata": {key: value for key, value in data.dict(exclude_none=True).items() if value},
+            }
+        # One could check here if there is a root level item 'metadata', and if not,
+        # create one and put the content of data under it
+
+        # Get current metadata
+        res = requests.get(
+            f"{self.depositions_base}/{deposition_id}",
+            params={"access_token": self.access_token},
+        )
+        res.raise_for_status()
+
+        deposition_data = res.json()
+
+        if (
+            deposition_data["submitted"] and deposition_data["state"] != "inprogress"
+        ):  # Start editing mode unless is is already started
+            res = self.edit(deposition_id)
+            res.raise_for_status()
+            deposition_data = res.json()
+
+        # Merge metadata
+        deposition_data = deposition_data | data
+
+        # Update the deposition metadata
+        res = requests.put(
+            f"{self.depositions_base}/{deposition_id}",
+            json=deposition_data,
+            params={"access_token": self.access_token},
+        )
+        res.raise_for_status()
+
+        if not publish:
+            # Return the latest deposition metadata
+            return res
+
+        return self.publish(deposition_id)
 
     def _upload_files(self, *, bucket: str, paths: Paths) -> List[requests.Response]:
         _paths = [paths] if isinstance(paths, (str, Path)) else paths

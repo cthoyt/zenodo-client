@@ -82,7 +82,7 @@ from pprint import pprint
 pprint(res.json())
 ```
 
-A real-world example can be found here: https://github.com/cthoyt/nsockg.
+A real-world example can be found here: <https://github.com/cthoyt/nsockg>.
 
 The following example shows how to use the Zenodo uploader if you already know what your deposition
 identifier is.
@@ -124,6 +124,40 @@ from zenodo_client import Zenodo
 zenodo = Zenodo()
 OOH_NA_NA_RECORD = '4020486'
 new_record = zenodo.download_latest(OOH_NA_NA_RECORD, 'names.tsv.gz')
+```
+
+The following example updates the metadata for a published deposit.
+
+```python
+from zenodo_client import Creator, Metadata, create_zenodo, upload_zenodo
+
+# Define the metadata that will be used on initial upload
+data = Metadata(
+    title='Test Upload 4',
+    upload_type='dataset',
+    description='test description',
+    creators=[
+        Creator(
+            name='Hoyt, Charles Tapley',
+            affiliation='Harvard Medical School',
+            orcid='0000-0003-4423-4370',
+        ),
+    ],
+)
+
+res = create_zenodo(
+    data=data,
+    sandbox=True,
+    paths=[],
+)
+
+from pprint import pprint
+pprint(res.json())
+
+# Update metadata
+data.description='corrected test description'
+res = update_metadata_zenodo(deposition_id=res.json()["id"], data=data)
+pprint(res.json())
 ```
 
 A real-world example can be found [here](https://github.com/pyobo/pyobo/blob/master/src/pyobo/resource_utils.py)
