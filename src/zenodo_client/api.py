@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, Sequence, Union
 
 import pystow
+from tqdm.auto import tqdm
 import requests
 
 from .struct import Metadata
@@ -250,14 +251,16 @@ class Zenodo:
         _paths = [paths] if isinstance(paths, (str, Path)) else paths
         rv = []
         # see https://developers.zenodo.org/#quickstart-upload
-        for path in _paths:
+        for path in tqdm(_paths, desc='Uploading files'):
+            tqdm.write(f"uploading {path}")
+            url = f"{bucket}/{os.path.basename(path)}"
             with open(path, "rb") as file:
+                # TODO add progress bar to file upload
                 res = requests.put(
-                    f"{bucket}/{os.path.basename(path)}",
+                    url,
                     data=file,
                     params={"access_token": self.access_token},
                 )
-
             res.raise_for_status()
             rv.append(res)
         return rv
