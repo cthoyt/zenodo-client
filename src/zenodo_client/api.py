@@ -144,12 +144,7 @@ class Zenodo:
 
         deposition_id = res_json["id"]
         if not publish:
-            res = requests.get(
-                f"{self.depositions_base}/{deposition_id}",
-                params={"access_token": self.access_token},
-            )
-            res.raise_for_status()
-            return res
+            return self._get_deposition(deposition_id)
 
         logger.info("publishing files to deposition %s", deposition_id)
         return self.publish(deposition_id)
