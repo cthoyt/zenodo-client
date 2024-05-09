@@ -82,7 +82,7 @@ from pprint import pprint
 pprint(res.json())
 ```
 
-A real-world example can be found here: <https://github.com/cthoyt/nsockg>.
+A real-world example can be found here: https://github.com/cthoyt/nsockg.
 
 The following example shows how to use the Zenodo uploader if you already know what your deposition
 identifier is.
