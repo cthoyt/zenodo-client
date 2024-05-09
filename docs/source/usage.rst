@@ -28,42 +28,33 @@ DOI before uploading files but does not publish the record, allowing manual edit
 
 .. code-block:: python
 
-    import os
+    from pathlib import Path
     from zenodo_client import Creator, Metadata, create_zenodo, update_zenodo, publish_zenodo
+
+    HERE = Path(__file__).parent.resolve()
 
     # Define the metadata that will be used on initial upload
     data = Metadata(
-        title='Test Upload 3',
-        upload_type='dataset',
-        description='test description',
+        title="Test Upload 3",
+        upload_type="dataset",
+        description="test description",
         creators=[
             Creator(
-                name='Hoyt, Charles Tapley',
-                affiliation='Harvard Medical School',
-                orcid='0000-0003-4423-4370',
+                name="Hoyt, Charles Tapley",
+                orcid="0000-0003-4423-4370",
             ),
         ],
     )
 
-    res = create_zenodo(
-        data=data,
-        sandbox=True,
-        paths=[],
-        publish=False
-    )
+    res = create_zenodo(data=data, sandbox=True, paths=[], publish=False)
 
     expected_doi = res.json()["metadata"]["prereserve_doi"]["doi"]
 
-    # Create a file using the expected DOI
-    with open('file.txt', 'w') as file:
-        file.writelines(expected_doi)
-
-    paths = [
-        os.path.join(os.getcwd(), 'file.txt')
-    ]
+    path = HERE / "file.txt"
+    path.write_text(expected_doi)  # this can be any text, we're just using the DOI as an example
 
     # Add files
-    res = update_zenodo(deposition_id=res.json()["id"], paths=paths, publish=False)
+    res = update_zenodo(deposition_id=res.json()["id"], paths=[path], publish=False)
 
     # Now check in Zenodo and publish there, or continue with
     res = publish_zenodo(deposition_id=res.json()["id"])
