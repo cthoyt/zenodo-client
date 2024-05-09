@@ -222,10 +222,8 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-        res = requests.get(
-            f"{self.depositions_base}/{deposition_id}",
-            params={"access_token": self.access_token},
-        )
+        url = f"{self.depositions_base}/{deposition_id}"
+        res = requests.get(url, params={"access_token": self.access_token})
         res.raise_for_status()
         deposition_data = res.json()
 
