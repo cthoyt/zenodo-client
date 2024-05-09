@@ -8,6 +8,8 @@ from typing import List, Optional, Sequence
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
 
+from ._pydantic_compat import field_validator
+
 __all__ = [
     "Creator",
     "Metadata",
@@ -49,9 +51,12 @@ class Creator(BaseModel):
         """Get the GND identifier as a URL."""
         return f"https://d-nb.info/gnd/{self.gnd}" if self.gnd else None
 
-    def __post_init__(self):  # noqa:D105
-        if "," not in self.name:
+    @field_validator("name")  # type:ignore
+    def comma_in_name(cls, v: str) -> str:  # noqa:N805
+        """Check that a comma appears in the name."""
+        if "," not in v:
             raise ValueError("name should be in format Family name, given names")
+        return v
 
 
 UploadType = Literal[
