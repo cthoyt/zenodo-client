@@ -3,10 +3,12 @@
 """Data structures for Zenodo."""
 
 import datetime
-from typing import List, Optional, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
 
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
+
+from ._pydantic_compat import field_validator, get_field_validator_values
 
 __all__ = [
     "Creator",
@@ -49,9 +51,13 @@ class Creator(BaseModel):
         """Get the GND identifier as a URL."""
         return f"https://d-nb.info/gnd/{self.gnd}" if self.gnd else None
 
-    def __post_init__(self):  # noqa:D105
-        if "," not in self.name:
-            raise ValueError("name should be in format Family name, given names")
+    @field_validator("name")  # type:ignore
+    def comma_in_name(cls, v: str, values: Mapping[str, Any]) -> str:  # noqa:N805
+        """Check that a comma appears in the name."""
+        name = get_field_validator_values(values, "name")
+        if "," not in name:
+            raise ValueError(f"name should be in format Family name, given names")
+        return v
 
 
 UploadType = Literal[
