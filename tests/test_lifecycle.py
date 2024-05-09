@@ -27,6 +27,15 @@ CREATOR = Creator(
 )
 
 
+class TestStruct(unittest.TestCase):
+    """Tests for data structures."""
+
+    def test_name(self):
+        """Test name errors."""
+        with self.assertRaises(ValueError):
+            Creator(name="Charles Tapley Hoyt")
+
+
 class TestLifecycle(unittest.TestCase):
     """Test case for zenodo client."""
 
