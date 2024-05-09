@@ -225,6 +225,7 @@ class Zenodo:
         :return: The response JSON from the Zenodo API
         """
         res = self._get_deposition(deposition_id)
+
         deposition_data = res.json()
         if deposition_data["submitted"]:
             new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id, res)
