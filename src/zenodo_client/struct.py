@@ -8,7 +8,7 @@ from typing import List, Optional, Sequence
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
 
-from ._pydantic_compat import field_validator, get_field_validator_values
+from ._pydantic_compat import field_validator
 
 __all__ = [
     "Creator",
