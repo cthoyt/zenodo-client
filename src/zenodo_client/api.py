@@ -214,6 +214,13 @@ class Zenodo:
         res.raise_for_status()
         return res
 
+    def _get_deposition(self, deposition_id: str) -> requests.Response:
+        """Get the metadata for a deposition."""
+        url = f"{self.depositions_base}/{deposition_id}"
+        res = requests.get(url, params={"access_token": self.access_token})
+        res.raise_for_status()
+        return res
+
     def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files.
 
@@ -222,16 +229,12 @@ class Zenodo:
         :param publish: Publish the deposition after the update.
         :return: The response JSON from the Zenodo API
         """
-        url = f"{self.depositions_base}/{deposition_id}"
-        res = requests.get(url, params={"access_token": self.access_token})
-        res.raise_for_status()
+        res = self._get_deposition(deposition_id)
         deposition_data = res.json()
-
         if deposition_data["submitted"]:
             new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id, res)
         else:
-            new_deposition_id = deposition_data["id"]
-            new_deposition_data = deposition_data
+            new_deposition_id, new_deposition_data = deposition_data["id"], deposition_data
 
         bucket = new_deposition_data["links"]["bucket"]
 
@@ -240,11 +243,7 @@ class Zenodo:
         self._upload_files(bucket=bucket, paths=paths)
 
         # Get the new metadata with the files
-        res = requests.get(
-            f"{self.depositions_base}/{deposition_id}",
-            params={"access_token": self.access_token},
-        )
-        res.raise_for_status()
+        res = self._get_deposition(deposition_id)
 
         if not publish:
             # Return the response with latest metadata
@@ -254,9 +253,7 @@ class Zenodo:
         return self.publish(new_deposition_id)
 
     def _update_submitted_deposition_metadata(self, deposition_id: str, res: requests.Response) -> tuple:
-        url = f"{self.depositions_base}/{deposition_id}"
-        res = requests.get(url, params={"access_token": self.access_token})
-        res.raise_for_status()
+        res = self._get_deposition(deposition_id)
         old_version = res.json()["metadata"]["version"]
         new_version = _prepare_new_version(old_version)
 
