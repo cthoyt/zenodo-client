@@ -21,7 +21,7 @@
     <a href="https://github.com/cthoyt/zenodo-client/blob/main/LICENSE">
         <img alt="PyPI - License" src="https://img.shields.io/pypi/l/zenodo_client" />
     </a>
-    <a href='https://zenodo_client.readthedocs.io/en/latest/?badge=latest'>
+    <a href='https://zenodo-client.readthedocs.io/en/latest'>
         <img src='https://readthedocs.org/projects/zenodo_client/badge/?version=latest' alt='Documentation Status' />
     </a>
     <a href="https://codecov.io/gh/cthoyt/zenodo-client/branch/main">
