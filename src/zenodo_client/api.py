@@ -18,6 +18,7 @@ __all__ = [
     "ensure_zenodo",
     "update_zenodo",
     "create_zenodo",
+    "publish_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
     "Zenodo",
@@ -37,14 +38,19 @@ def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Resp
     return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
-def create_zenodo(data: Data, paths: Paths, **kwargs) -> requests.Response:
+def create_zenodo(data: Data, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
     """Create a Zenodo record."""
-    return Zenodo(**kwargs).create(data, paths)
+    return Zenodo(**kwargs).create(data, paths, publish=publish)
 
 
-def update_zenodo(deposition_id: str, paths: Paths, **kwargs) -> requests.Response:
+def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
     """Update a Zenodo record."""
-    return Zenodo(**kwargs).update(deposition_id, paths)
+    return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
+
+
+def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs) -> requests.Response:
+    """Publish a Zenodo record."""
+    return Zenodo(**kwargs).publish(deposition_id, sleep=sleep)
 
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
@@ -104,11 +110,12 @@ class Zenodo:
         pystow.write_config(self.module, key, str(res.json()["id"]))
         return res
 
-    def create(self, data: Data, paths: Paths) -> requests.Response:
+    def create(self, data: Data, paths: Paths, *, publish: bool = True) -> requests.Response:
         """Create a record.
 
         :param data: The JSON data to send to the new data
         :param paths: Paths to local files to upload
+        :param publish: Publish the deposit after creation
         :return: The response JSON from the Zenodo API
         :raises ValueError: if the response is missing a "bucket"
         """
@@ -136,6 +143,9 @@ class Zenodo:
         self._upload_files(bucket=bucket, paths=paths)
 
         deposition_id = res_json["id"]
+        if not publish:
+            return self._get_deposition(deposition_id)
+
         logger.info("publishing files to deposition %s", deposition_id)
         return self.publish(deposition_id)
 
@@ -199,16 +209,47 @@ class Zenodo:
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, paths: Paths) -> requests.Response:
-        """Update a record, including creating a new version of the given record, with the given files.
-
-        :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
-        :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
-        :return: The response JSON from the Zenodo API
-        """
+    def _get_deposition(self, deposition_id: str) -> requests.Response:
+        """Get the metadata for a deposition."""
         url = f"{self.depositions_base}/{deposition_id}"
         res = requests.get(url, params={"access_token": self.access_token})
         res.raise_for_status()
+        return res
+
+    def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
+        """Update a record, including creating a new version of the given record, with the given files.
+
+        :param deposition_id: The identifier of the deposition on Zenodo.
+        :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
+        :param publish: Publish the deposition after the update.
+        :return: The response JSON from the Zenodo API
+        """
+        res = self._get_deposition(deposition_id)
+
+        deposition_data = res.json()
+        if deposition_data["submitted"]:
+            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id, res)
+        else:
+            new_deposition_id, new_deposition_data = deposition_data["id"], deposition_data
+
+        bucket = new_deposition_data["links"]["bucket"]
+
+        # Upload new files. It calculates the hash on all of these, and if no files have changed,
+        #  there will be no update
+        self._upload_files(bucket=bucket, paths=paths)
+
+        # Get the new metadata with the files
+        res = self._get_deposition(deposition_id)
+
+        if not publish:
+            # Return the response with latest metadata
+            return res
+
+        # Send the publish command
+        return self.publish(new_deposition_id)
+
+    def _update_submitted_deposition_metadata(self, deposition_id: str, res: requests.Response) -> tuple:
+        res = self._get_deposition(deposition_id)
         old_version = res.json()["metadata"]["version"]
         new_version = _prepare_new_version(old_version)
 
@@ -224,7 +265,7 @@ class Zenodo:
         )
         res.raise_for_status()
         new_deposition_data = res.json()
-        # Update the version
+        # Update the version and date
         new_deposition_data["metadata"]["version"] = new_version
         new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
 
@@ -237,14 +278,7 @@ class Zenodo:
         )
         res.raise_for_status()
 
-        bucket = new_deposition_data["links"]["bucket"]
-
-        # Upload new files. It calculates the hash on all of these, and if no files have changed,
-        #  there will be no update
-        self._upload_files(bucket=bucket, paths=paths)
-
-        # Send the publish command
-        return self.publish(new_deposition_id)
+        return new_deposition_id, new_deposition_data
 
     def _upload_files(self, *, bucket: str, paths: Paths) -> List[requests.Response]:
         _paths = [paths] if isinstance(paths, (str, Path)) else paths

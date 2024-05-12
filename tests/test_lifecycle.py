@@ -1,6 +1,7 @@
 """Tests for the upload and revision lifecyle."""
 
 import datetime
+import hashlib
 import logging
 import tempfile
 import unittest
@@ -142,3 +143,40 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual("dataset", res_json["metadata"]["upload_type"])
         self.assertEqual(data.title, res_json["metadata"]["title"])
         self.assertEqual(data.version, res_json["metadata"]["version"])
+
+    def test_create_without_publish(self):
+        """Test create without publishing."""
+        data = Metadata(
+            title="Test Upload",
+            upload_type="dataset",
+            description="Test create without publishing",
+            creators=[
+                Creator(
+                    name="Hoyt, Charles Tapley",
+                    affiliation="Harvard Medical School",
+                    orcid="0000-0003-4423-4370",
+                ),
+            ],
+        )
+
+        res = self.zenodo.create(data=data, paths=[], publish=False)
+        res_create_json = res.json()
+        deposition_id = res_create_json["id"]
+
+        self.assertEqual(False, res_create_json["submitted"])
+        self.assertEqual("unsubmitted", res_create_json["state"])
+        self.assertEqual(0, len(res_create_json["files"]))
+
+        path = self.directory.joinpath("doi.txt")
+        path.write_text("this record will have DOI %s" % res_create_json["metadata"]["prereserve_doi"]["doi"])
+
+        res = self.zenodo.update(deposition_id, paths=[path], publish=False)
+        res_update_json = res.json()
+
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324,S303
+        self.assertEqual(path_hash, res_update_json["files"][0]["checksum"])
+        self.assertEqual(deposition_id, res_update_json["id"])
+
+        res = self.zenodo.publish(deposition_id=deposition_id)
+        res_publish_json = res.json()
+        self.assertEqual(deposition_id, res_publish_json["id"])
