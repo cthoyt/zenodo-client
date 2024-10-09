@@ -33,32 +33,32 @@ PartsHint = Union[None, Sequence[str], PartsFunc]
 Paths = Union[str, Path, Iterable[str], Iterable[Path]]
 
 
-def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs) -> requests.Response:
+def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs: Any) -> requests.Response:
     """Create a Zenodo record if it doesn't exist, or update one that does."""
     return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
-def create_zenodo(data: Data, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
+def create_zenodo(data: Data, paths: Paths, *, publish: bool = True, **kwargs: Any) -> requests.Response:
     """Create a Zenodo record."""
     return Zenodo(**kwargs).create(data, paths, publish=publish)
 
 
-def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs) -> requests.Response:
+def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs: Any) -> requests.Response:
     """Update a Zenodo record."""
     return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
 
 
-def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs) -> requests.Response:
+def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs: Any) -> requests.Response:
     """Publish a Zenodo record."""
     return Zenodo(**kwargs).publish(deposition_id, sleep=sleep)
 
 
-def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs) -> Path:
+def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs: Any) -> Path:
     """Download a Zenodo record."""
     return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
 
 
-def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs) -> Path:
+def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs: Any) -> Path:
     """Download the latest Zenodo record."""
     return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
 
@@ -66,7 +66,7 @@ def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, *
 class Zenodo:
     """A wrapper around parts of the Zenodo API."""
 
-    def __init__(self, access_token: Optional[str] = None, sandbox: bool = False):
+    def __init__(self, access_token: Optional[str] = None, sandbox: bool = False) -> None:
         """Initialize the Zenodo class.
 
         :param access_token: The Zenodo API. Read with :mod:`pystow` from zenodo/api_token
@@ -228,7 +228,7 @@ class Zenodo:
 
         deposition_data = res.json()
         if deposition_data["submitted"]:
-            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id, res)
+            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id)
         else:
             new_deposition_id, new_deposition_data = deposition_data["id"], deposition_data
 
@@ -248,7 +248,7 @@ class Zenodo:
         # Send the publish command
         return self.publish(new_deposition_id)
 
-    def _update_submitted_deposition_metadata(self, deposition_id: str, res: requests.Response) -> tuple:
+    def _update_submitted_deposition_metadata(self, deposition_id: str) -> tuple:
         res = self._get_deposition(deposition_id)
         old_version = res.json()["metadata"]["version"]
         new_version = _prepare_new_version(old_version)

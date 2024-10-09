@@ -2,7 +2,7 @@
 
 """A wrapper for the Zenodo API."""
 
-from .api import (  # noqa:F401
+from .api import (
     Zenodo,
     create_zenodo,
     download_zenodo,
@@ -11,4 +11,16 @@ from .api import (  # noqa:F401
     publish_zenodo,
     update_zenodo,
 )
-from .struct import Creator, Metadata  # noqa:F401
+from .struct import Community, Creator, Metadata
+
+__all__ = [
+    "Zenodo",
+    "create_zenodo",
+    "download_zenodo",
+    "download_zenodo_latest",
+    "ensure_zenodo",
+    "publish_zenodo",
+    "update_zenodo",
+    "Creator",
+    "Metadata",
+]
