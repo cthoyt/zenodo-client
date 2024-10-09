@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-def main():
+def main() -> None:
     """CLI for Zenodo Client."""
 
 
@@ -35,7 +35,7 @@ def main():
 @click.argument("path")
 @click.option("--force", is_flag=True)
 @click.option("--latest", is_flag=True)
-def download(deposition: str, path: str, force: bool, latest: bool):
+def download(deposition: str, path: str, force: bool, latest: bool) -> None:
     """Ensure a record is downloaded."""
     if latest:
         download_zenodo_latest(deposition, path, force=force)
@@ -48,7 +48,7 @@ def download(deposition: str, path: str, force: bool, latest: bool):
 @click.argument("paths", nargs=-1)
 @verbose_option
 @click.version_option()
-def update(deposition, paths):
+def update(deposition: str, paths: list[str]) -> None:
     """Update the record and given files."""
     update_zenodo(deposition, paths)
 
