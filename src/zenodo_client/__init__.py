@@ -11,7 +11,15 @@ from .api import (
     publish_zenodo,
     update_zenodo,
 )
-from .struct import Community, Creator, Metadata
+from .struct import (
+    AccessRight,
+    Community,
+    Creator,
+    ImageType,
+    Metadata,
+    PublicationType,
+    UploadType,
+)
 
 __all__ = [
     "Zenodo",
@@ -22,5 +30,10 @@ __all__ = [
     "publish_zenodo",
     "update_zenodo",
     "Creator",
+    "Community",
     "Metadata",
+    "UploadType",
+    "PublicationType",
+    "ImageType",
+    "AccessRight",
 ]
