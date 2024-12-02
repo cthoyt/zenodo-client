@@ -122,7 +122,7 @@ class Zenodo:
         if isinstance(data, Metadata):
             logger.debug("serializing metadata")
             data = {
-                "metadata": {key: value for key, value in data.dict(exclude_none=True).items() if value},
+                "metadata": {key: value for key, value in data.model_dump(exclude_none=True).items() if value},
             }
 
         res = requests.post(
