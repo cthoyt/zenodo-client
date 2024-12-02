@@ -26,17 +26,19 @@ class Creator(BaseModel):
     """A creator, see https://developers.zenodo.org/#representation."""
 
     name: str = Field(
-        ..., description="Name of the creator in the format Family name, given names", example="Hoyt, Charles Tapley"
+        ...,
+        description="Name of the creator in the format Family name, given names",
+        examples=["Hoyt, Charles Tapley"],
     )
     affiliation: Optional[str] = Field(
         default=None,
         description="affiliation of the creator",
-        example="Harvard Medical School",
+        examples=["Harvard Medical School"],
     )
     orcid: Optional[str] = Field(
         default=None,
         description="ORCID identifier of the creator",
-        example="0000-0003-4423-4370",
+        examples=["0000-0003-4423-4370"],
     )
     gnd: Optional[str] = Field(
         default=None,
