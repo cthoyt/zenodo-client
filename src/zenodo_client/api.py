@@ -379,7 +379,9 @@ class Zenodo:
         For example, to download the most recent version of NSoC-KG, you can
         use the following command:
 
-        >>> path = Zenodo().download("4574555", "triples.tsv")
+        .. code-block:: python
+
+            path = Zenodo().download("4574555", "triples.tsv")
 
         Even as new versions of the data are uploaded, this command will always
         be able to check if a new version is available, download it if it is, and
