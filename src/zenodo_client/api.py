@@ -172,8 +172,9 @@ class Zenodo:
         """Unlock already submitted deposition for editing, see https://developers.zenodo.org/#edit.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
-        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
-            might be able to get away with disabling this.
+        :param sleep:
+            Sleep for one second just in case of race conditions. If you're feeling lucky
+            and rushed, you might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
         return self._action(deposition_id=deposition_id, action="edit", sleep=sleep)
@@ -182,8 +183,9 @@ class Zenodo:
         """Publish a record that's in edit mode, see https://developers.zenodo.org/#publish.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
-        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
-            might be able to get away with disabling this.
+        :param sleep:
+            Sleep for one second just in case of race conditions. If you're feeling lucky
+            and rushed, you might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
         return self._action(deposition_id=deposition_id, action="publish", sleep=sleep)
@@ -192,8 +194,9 @@ class Zenodo:
         """Discard changes in the current editing session., see https://developers.zenodo.org/#discard.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
-        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
-            might be able to get away with disabling this.
+        :param sleep:
+            Sleep for one second just in case of race conditions. If you're feeling lucky
+            and rushed, you might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
         return self._action(deposition_id=deposition_id, action="discard", sleep=sleep)
@@ -202,8 +205,9 @@ class Zenodo:
         """Create a new version of a deposition, see https://developers.zenodo.org/#new-version.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
-        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
-            might be able to get away with disabling this.
+        :param sleep:
+            Sleep for one second just in case of race conditions. If you're feeling lucky
+            and rushed, you might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
         return self._action(deposition_id=deposition_id, action="newversion", sleep=sleep)
@@ -218,8 +222,9 @@ class Zenodo:
 
         :param deposition_id: The identifier of the deposition on Zenodo. It should be in edit mode.
         :param action: The action to perform
-        :param sleep: Sleep for one second just in case of race conditions. If you're feeling lucky and rushed, you
-            might be able to get away with disabling this.
+        :param sleep:
+            Sleep for one second just in case of race conditions. If you're feeling lucky
+            and rushed, you might be able to get away with disabling this.
         :return: The response JSON from the Zenodo API
         """
         if sleep:
@@ -242,10 +247,12 @@ class Zenodo:
     def update(
         self, deposition_id: str, paths: Paths, *, publish: bool = True, timeout: TimeoutHint = 300
     ) -> requests.Response:
-        """Update a record, including creating a new version of the given record, with the given files.
+        """Update a record, including creating a new version, with the given files.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
-        :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
+        :param paths:
+            Paths to local files to upload; existing files with matching hashes will not be
+            uploaded.
         :param publish: Publish the deposition after the update.
         :param timeout: The maximum timeout for uploading files
         :return: The response JSON from the Zenodo API
@@ -358,11 +365,13 @@ class Zenodo:
 
         :param record_id: The Zenodo record id
         :param name: The name of the file in the Zenodo record
-        :param parts: Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
-            ``<PYSTOW_HOME>/zenodo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where ``CONCEPT_RECORD_ID`` is the
-            consistent concept record ID for all versions of the same record. If a function is given, the function
-            should take 3 position arguments: concept record id, record id, and version, then return a sequence for
-            PyStow. The name of the file is automatically appended to the end of the sequence.
+        :param parts:
+            Optional arguments on where to store with :func:`pystow.ensure`. If none given, goes in
+            ``<PYSTOW_HOME>/zenodo/<CONCEPT_RECORD_ID>/<RECORD>/<PATH>``. Where
+            ``CONCEPT_RECORD_ID`` is the consistent concept record ID for all versions of the same
+            record. If a function is given, the function should take 3 position arguments: concept
+            record id, record id, and version, then return a sequence for PyStow. The name of the
+            file is automatically appended to the end of the sequence.
         :param force: Should the file be re-downloaded if it already is cached? Defaults to false.
         :returns: the path to the downloaded file.
         :raises FileNotFoundError: If the Zenodo record doesn't have a file with the given name

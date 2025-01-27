@@ -105,8 +105,13 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.license, res_json["metadata"]["license"])
         self.assertEqual(data.publication_type, res_json["metadata"]["publication_type"])
         # FIXME bug in new zenodo - communities are not returned by creation endpoint
-        # self.assertIn("communities", res_json["metadata"], msg=f"\nKeys: {set(res_json['metadata'])}")
-        # self.assertEqual({"zenodo", "bioinformatics"}, {c["identifier"] for c in res_json["metadata"]["communities"]})
+        # self.assertIn(
+        #     "communities", res_json["metadata"], msg=f"\nKeys: {set(res_json['metadata'])}"
+        # )
+        # self.assertEqual(
+        #     {"zenodo", "bioinformatics"},
+        #     {c["identifier"] for c in res_json["metadata"]["communities"]},
+        # )
         self.assertEqual(data.keywords, res_json["metadata"]["keywords"])
         self.assertEqual(data.notes, res_json["metadata"]["notes"])
 
