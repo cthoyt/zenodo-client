@@ -164,6 +164,8 @@ extend-select = [
 ignore = [
     "D105", # Missing docstring in magic method
     "E203", # Black conflicts with the following
+    "ERA001", # FIXME
+    "E501", # FIXME
 ]
 
 # See https://docs.astral.sh/ruff/settings/#per-file-ignores
