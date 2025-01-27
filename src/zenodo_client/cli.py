@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Command line interface for :mod:`zenodo_client`.
 
 Why does this file exist, and why not put this in ``__main__``? You might be tempted to import things from ``__main__``
@@ -46,7 +44,7 @@ def download(deposition: str, path: str, force: bool, latest: bool) -> None:
 @main.command()
 @click.argument("deposition")
 @click.argument("paths", nargs=-1)
-@verbose_option
+@verbose_option  # type:ignore[misc]
 @click.version_option()
 def update(deposition: str, paths: list[str]) -> None:
     """Update the record and given files."""

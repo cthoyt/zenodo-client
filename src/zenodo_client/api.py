@@ -1,13 +1,14 @@
-# -*- coding: utf-8 -*-
-
 """A client for Zenodo."""
+
+from __future__ import annotations
 
 import datetime
 import logging
 import os
 import time
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Literal, Mapping, Optional, Sequence, Union
+from typing import Any, Literal, TypeAlias, cast
 
 import pystow
 import requests
@@ -15,22 +16,24 @@ import requests
 from .struct import Metadata
 
 __all__ = [
-    "ensure_zenodo",
-    "update_zenodo",
+    "Zenodo",
     "create_zenodo",
-    "publish_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
-    "Zenodo",
+    "ensure_zenodo",
+    "publish_zenodo",
+    "update_zenodo",
 ]
 
 logger = logging.getLogger(__name__)
 
-Data = Union[Mapping[str, Any], Metadata]
+Data = Mapping[str, Any] | Metadata
 
-PartsFunc = Callable[[str, str, str], Sequence[str]]
-PartsHint = Union[None, Sequence[str], PartsFunc]
-Paths = Union[str, Path, Iterable[str], Iterable[Path]]
+PartsFunc: TypeAlias = Callable[[str, str, str], Sequence[str]]
+PartsHint: TypeAlias = None | Sequence[str] | PartsFunc
+Paths: TypeAlias = str | Path | Iterable[str] | Iterable[Path]
+
+TimeoutHint: TypeAlias = int | float
 
 
 def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs: Any) -> requests.Response:
@@ -38,12 +41,16 @@ def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs: Any) -> requests
     return Zenodo(**kwargs).ensure(key=key, data=data, paths=paths)
 
 
-def create_zenodo(data: Data, paths: Paths, *, publish: bool = True, **kwargs: Any) -> requests.Response:
+def create_zenodo(
+    data: Data, paths: Paths, *, publish: bool = True, **kwargs: Any
+) -> requests.Response:
     """Create a Zenodo record."""
     return Zenodo(**kwargs).create(data, paths, publish=publish)
 
 
-def update_zenodo(deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs: Any) -> requests.Response:
+def update_zenodo(
+    deposition_id: str, paths: Paths, *, publish: bool = True, **kwargs: Any
+) -> requests.Response:
     """Update a Zenodo record."""
     return Zenodo(**kwargs).update(deposition_id, paths, publish=publish)
 
@@ -58,7 +65,9 @@ def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs
     return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
 
 
-def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, **kwargs: Any) -> Path:
+def download_zenodo_latest(
+    deposition_id: str, path: str, force: bool = False, **kwargs: Any
+) -> Path:
     """Download the latest Zenodo record."""
     return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
 
@@ -66,7 +75,7 @@ def download_zenodo_latest(deposition_id: str, path: str, force: bool = False, *
 class Zenodo:
     """A wrapper around parts of the Zenodo API."""
 
-    def __init__(self, access_token: Optional[str] = None, sandbox: bool = False) -> None:
+    def __init__(self, access_token: str | None = None, sandbox: bool = False) -> None:
         """Initialize the Zenodo class.
 
         :param access_token: The Zenodo API. Read with :mod:`pystow` from zenodo/api_token
@@ -79,10 +88,14 @@ class Zenodo:
             # Use subsection support introduced in PyStow in
             # https://github.com/cthoyt/pystow/pull/59
             self.module = "zenodo:sandbox"
-            self.access_token = pystow.get_config(self.module, "api_token", passthrough=access_token)
+            self.access_token = pystow.get_config(
+                self.module, "api_token", passthrough=access_token
+            )
             if self.access_token is None:
                 # old-style fallback
-                self.access_token = pystow.get_config("zenodo", "sandbox_api_token", raise_on_missing=True)
+                self.access_token = pystow.get_config(
+                    "zenodo", "sandbox_api_token", raise_on_missing=True
+                )
         else:
             self.base = "https://zenodo.org"
             self.module = "zenodo"
@@ -110,25 +123,31 @@ class Zenodo:
         pystow.write_config(self.module, key, str(res.json()["id"]))
         return res
 
-    def create(self, data: Data, paths: Paths, *, publish: bool = True) -> requests.Response:
+    def create(
+        self, data: Data, paths: Paths, *, publish: bool = True, timeout: TimeoutHint = 300
+    ) -> requests.Response:
         """Create a record.
 
         :param data: The JSON data to send to the new data
         :param paths: Paths to local files to upload
         :param publish: Publish the deposit after creation
+        :param timeout: How long to timeout on upload?
         :return: The response JSON from the Zenodo API
         :raises ValueError: if the response is missing a "bucket"
         """
         if isinstance(data, Metadata):
             logger.debug("serializing metadata")
             data = {
-                "metadata": {key: value for key, value in data.model_dump(exclude_none=True).items() if value},
+                "metadata": {
+                    key: value for key, value in data.model_dump(exclude_none=True).items() if value
+                },
             }
 
         res = requests.post(
             self.depositions_base,
             json=data,
             params={"access_token": self.access_token},
+            timeout=15,
         )
         if res.status_code == 400:
             raise ValueError(res.text)
@@ -140,7 +159,7 @@ class Zenodo:
             raise ValueError(f"No bucket in response. Got: {res_json}")
 
         logger.info("uploading files to bucket %s", bucket)
-        self._upload_files(bucket=bucket, paths=paths)
+        self._upload_files(bucket=bucket, paths=paths, timeout=timeout)
 
         deposition_id = res_json["id"]
         if not publish:
@@ -190,7 +209,10 @@ class Zenodo:
         return self._action(deposition_id=deposition_id, action="newversion", sleep=sleep)
 
     def _action(
-        self, deposition_id: str, action: Literal["discard", "publish", "newversion", "edit"], sleep: bool = True
+        self,
+        deposition_id: str,
+        action: Literal["discard", "publish", "newversion", "edit"],
+        sleep: bool = True,
     ) -> requests.Response:
         """Run an action on a record.
 
@@ -205,6 +227,7 @@ class Zenodo:
         res = requests.post(
             f"{self.depositions_base}/{deposition_id}/actions/{action}",
             params={"access_token": self.access_token},
+            timeout=15,
         )
         res.raise_for_status()
         return res
@@ -212,23 +235,28 @@ class Zenodo:
     def _get_deposition(self, deposition_id: str) -> requests.Response:
         """Get the metadata for a deposition."""
         url = f"{self.depositions_base}/{deposition_id}"
-        res = requests.get(url, params={"access_token": self.access_token})
+        res = requests.get(url, params={"access_token": self.access_token}, timeout=5)
         res.raise_for_status()
         return res
 
-    def update(self, deposition_id: str, paths: Paths, publish: bool = True) -> requests.Response:
+    def update(
+        self, deposition_id: str, paths: Paths, *, publish: bool = True, timeout: TimeoutHint = 300
+    ) -> requests.Response:
         """Update a record, including creating a new version of the given record, with the given files.
 
         :param deposition_id: The identifier of the deposition on Zenodo.
         :param paths: Paths to local files to upload; existing files with matching hashes will not be uploaded.
         :param publish: Publish the deposition after the update.
+        :param timeout: The maximum timeout for uploading files
         :return: The response JSON from the Zenodo API
         """
         res = self._get_deposition(deposition_id)
 
         deposition_data = res.json()
         if deposition_data["submitted"]:
-            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(deposition_id)
+            new_deposition_id, new_deposition_data = self._update_submitted_deposition_metadata(
+                deposition_id
+            )
         else:
             new_deposition_id, new_deposition_data = deposition_data["id"], deposition_data
 
@@ -236,7 +264,7 @@ class Zenodo:
 
         # Upload new files. It calculates the hash on all of these, and if no files have changed,
         #  there will be no update
-        self._upload_files(bucket=bucket, paths=paths)
+        self._upload_files(bucket=bucket, paths=paths, timeout=timeout)
 
         # Get the new metadata with the files
         res = self._get_deposition(deposition_id)
@@ -248,7 +276,9 @@ class Zenodo:
         # Send the publish command
         return self.publish(new_deposition_id)
 
-    def _update_submitted_deposition_metadata(self, deposition_id: str) -> tuple:
+    def _update_submitted_deposition_metadata(
+        self, deposition_id: str
+    ) -> tuple[str, dict[str, Any]]:
         res = self._get_deposition(deposition_id)
         old_version = res.json()["metadata"]["version"]
         new_version = _prepare_new_version(old_version)
@@ -262,12 +292,15 @@ class Zenodo:
         res = requests.get(
             f"{self.depositions_base}/{new_deposition_id}",
             params={"access_token": self.access_token},
+            timeout=15,
         )
         res.raise_for_status()
         new_deposition_data = res.json()
         # Update the version and date
         new_deposition_data["metadata"]["version"] = new_version
-        new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime("%Y-%m-%d")
+        new_deposition_data["metadata"]["publication_date"] = datetime.datetime.today().strftime(
+            "%Y-%m-%d"
+        )
 
         # Update the deposition for the new version
         # see: https://developers.zenodo.org/#update
@@ -275,13 +308,16 @@ class Zenodo:
             f"{self.depositions_base}/{new_deposition_id}",
             json={"metadata": new_deposition_data["metadata"]},
             params={"access_token": self.access_token},
+            timeout=15,
         )
         res.raise_for_status()
 
         return new_deposition_id, new_deposition_data
 
-    def _upload_files(self, *, bucket: str, paths: Paths) -> List[requests.Response]:
-        _paths = [paths] if isinstance(paths, (str, Path)) else paths
+    def _upload_files(
+        self, *, bucket: str, paths: Paths, timeout: TimeoutHint
+    ) -> list[requests.Response]:
+        _paths = [paths] if isinstance(paths, str | Path) else paths
         rv = []
         # see https://developers.zenodo.org/#quickstart-upload
         for path in _paths:
@@ -290,30 +326,34 @@ class Zenodo:
                     f"{bucket}/{os.path.basename(path)}",
                     data=file,
                     params={"access_token": self.access_token},
+                    timeout=timeout,
                 )
 
             res.raise_for_status()
             rv.append(res)
         return rv
 
-    def get_record(self, record_id: Union[int, str]) -> requests.Response:
+    def get_record(self, record_id: int | str) -> requests.Response:
         """Get the metadata for a given record."""
         res = requests.get(
             f"{self.api_base}/records/{record_id}",
             params={"access_token": self.access_token},
+            timeout=5,
         )
         res.raise_for_status()
         return res
 
-    def get_latest_record(self, record_id: Union[int, str]) -> str:
+    def get_latest_record(self, record_id: int | str) -> str:
         """Get the latest record related to the given record."""
         res_json = self.get_record(record_id).json()
         # Still works even in the case that the given record ID is the latest.
-        latest = res_json["links"]["latest"].split("/")[-3]
+        latest = cast(str, res_json["links"]["latest"].split("/")[-3])
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
         return latest
 
-    def download(self, record_id: Union[int, str], name: str, *, force: bool = False, parts: PartsHint = None) -> Path:
+    def download(
+        self, record_id: int | str, name: str, *, force: bool = False, parts: PartsHint = None
+    ) -> Path:
         """Download the file for the given record.
 
         :param record_id: The Zenodo record id
@@ -330,7 +370,7 @@ class Zenodo:
         For example, to download the most recent version of NSoC-KG, you can
         use the following command:
 
-        >>> path = Zenodo().download('4574555', 'triples.tsv')
+        >>> path = Zenodo().download("4574555", "triples.tsv")
 
         Even as new versions of the data are uploaded, this command will always
         be able to check if a new version is available, download it if it is, and
@@ -353,7 +393,9 @@ class Zenodo:
                 url = file["links"]["self"]
                 break
         else:
-            raise FileNotFoundError(f"zenodo.record:{record_id} does not have a file with key {name}")
+            raise FileNotFoundError(
+                f"zenodo.record:{record_id} does not have a file with key {name}"
+            )
 
         if parts is None:
             parts = [self.module.replace(":", "-"), concept_record_id, version]
@@ -363,7 +405,7 @@ class Zenodo:
 
     def download_latest(
         self,
-        record_id: Union[int, str],
+        record_id: int | str,
         name: str,
         *,
         force: bool = False,
@@ -379,6 +421,12 @@ def _prepare_new_version(old_version: str) -> str:
     new_version = datetime.datetime.today().strftime("%Y-%m-%d")
     if old_version == new_version:
         new_version += "-1"
-    elif old_version.startswith(new_version) and old_version[-2] == "-" and old_version[-1].isnumeric():
-        new_version += "-" + str(1 + int(old_version[-1]))  # please don't do this more than 10 times a day
+    elif (
+        old_version.startswith(new_version)
+        and old_version[-2] == "-"
+        and old_version[-1].isnumeric()
+    ):
+        new_version += "-" + str(
+            1 + int(old_version[-1])
+        )  # please don't do this more than 10 times a day
     return new_version

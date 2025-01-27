@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """A wrapper for the Zenodo API."""
 
 from .api import (
@@ -22,6 +20,13 @@ from .struct import (
 )
 
 __all__ = [
+    "AccessRight",
+    "Community",
+    "Creator",
+    "ImageType",
+    "Metadata",
+    "PublicationType",
+    "UploadType",
     "Zenodo",
     "create_zenodo",
     "download_zenodo",
@@ -29,11 +34,4 @@ __all__ = [
     "ensure_zenodo",
     "publish_zenodo",
     "update_zenodo",
-    "Creator",
-    "Community",
-    "Metadata",
-    "UploadType",
-    "PublicationType",
-    "ImageType",
-    "AccessRight",
 ]
