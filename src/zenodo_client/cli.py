@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """Command line interface for :mod:`zenodo_client`.
 
-Why does this file exist, and why not put this in ``__main__``? You might be tempted to import things from ``__main__``
-later, but that will cause problems--the code will get executed twice:
+Why does this file exist, and why not put this in ``__main__``? You might be tempted to import
+things from ``__main__`` later, but that will cause problems--the code will get executed twice:
 
 - When you run ``python3 -m zenodo_client`` python will execute``__main__.py`` as a script.
   That means there won't be any ``zenodo_client.__main__`` in ``sys.modules``.
@@ -46,7 +44,7 @@ def download(deposition: str, path: str, force: bool, latest: bool) -> None:
 @main.command()
 @click.argument("deposition")
 @click.argument("paths", nargs=-1)
-@verbose_option
+@verbose_option  # type:ignore[misc]
 @click.version_option()
 def update(deposition: str, paths: list[str]) -> None:
     """Update the record and given files."""

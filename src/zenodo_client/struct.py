@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-
 """Data structures for Zenodo."""
 
 import datetime
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
-from typing_extensions import Literal
 
 __all__ = [
-    "Creator",
-    "Community",
-    "Metadata",
-    "UploadType",
-    "PublicationType",
-    "ImageType",
     "AccessRight",
+    "Community",
+    "Creator",
+    "ImageType",
+    "Metadata",
+    "PublicationType",
+    "UploadType",
 ]
 
 
@@ -30,33 +28,33 @@ class Creator(BaseModel):
         description="Name of the creator in the format Family name, given names",
         examples=["Hoyt, Charles Tapley"],
     )
-    affiliation: Optional[str] = Field(
+    affiliation: str | None = Field(
         default=None,
         description="affiliation of the creator",
         examples=["Harvard Medical School"],
     )
-    orcid: Optional[str] = Field(
+    orcid: str | None = Field(
         default=None,
         description="ORCID identifier of the creator",
         examples=["0000-0003-4423-4370"],
     )
-    gnd: Optional[str] = Field(
+    gnd: str | None = Field(
         default=None,
         description="German National Library identifier of the creator. "
         "See also https://www.wikidata.org/wiki/Property:P227.",
     )
 
     @property
-    def orcid_url(self) -> Optional[str]:
+    def orcid_url(self) -> str | None:
         """Get the ORCID identifier as a URL."""
         return f"https://orcid.org/{self.orcid}" if self.orcid else None
 
     @property
-    def gnd_url(self) -> Optional[str]:
+    def gnd_url(self) -> str | None:
         """Get the GND identifier as a URL."""
         return f"https://d-nb.info/gnd/{self.gnd}" if self.gnd else None
 
-    @field_validator("name")  # type:ignore
+    @field_validator("name")
     def comma_in_name(cls, v: str) -> str:  # noqa:N805
         """Check that a comma appears in the name."""
         if "," not in v:
@@ -132,22 +130,24 @@ class Metadata(BaseModel):
     description: str
     creators: Sequence[Creator]
     access_right: AccessRight = "open"
-    language: Optional[str] = "eng"
-    version: Optional[str] = Field(default_factory=_today_str)
-    license: Optional[str] = "CC0-1.0"
-    publication_type: Optional[PublicationType] = None
-    image_type: Optional[ImageType] = None
-    communities: List[Community] = Field(default_factory=list)
-    keywords: List[str] = Field(default_factory=list)
-    notes: Optional[str] = None
-    embargo_date: Optional[str] = None
+    language: str | None = "eng"
+    version: str | None = Field(default_factory=_today_str)
+    license: str | None = "CC0-1.0"
+    publication_type: PublicationType | None = None
+    image_type: ImageType | None = None
+    communities: list[Community] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    notes: str | None = None
+    embargo_date: str | None = None
 
-    def __post_init__(self):  # noqa:D105
+    def __post_init__(self) -> None:
         if self.upload_type == "publication":
             if self.publication_type is None:
                 raise ValueError("missing publication_type")
         if self.publication_type is not None and self.upload_type != "publication":
-            raise ValueError(f"Can't use publication_type with upload_type={self.upload_type}. Need publication.")
+            raise ValueError(
+                f"Can't use publication_type with upload_type={self.upload_type}. Need publication."
+            )
         elif self.upload_type == "image":
             if self.image_type is None:
                 raise ValueError("missing image_type")

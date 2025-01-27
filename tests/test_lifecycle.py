@@ -44,7 +44,9 @@ class TestLifecycle(unittest.TestCase):
         """Set up the test case with a zenodo client."""
         self.zenodo = Zenodo(sandbox=True)
         self.assertIsInstance(self.zenodo.access_token, str)
-        self.assertNotEqual("", self.zenodo.access_token, msg="Zenodo sandbox API token was set to empty string")
+        self.assertNotEqual(
+            "", self.zenodo.access_token, msg="Zenodo sandbox API token was set to empty string"
+        )
 
         self.key = f"test-{uuid4()}"
         self._directory = tempfile.TemporaryDirectory()
@@ -59,7 +61,11 @@ class TestLifecycle(unittest.TestCase):
 
     def test_connect(self):
         """Test connection works."""
-        r = requests.get(self.zenodo.depositions_base, params={"access_token": self.zenodo.access_token})
+        r = requests.get(
+            self.zenodo.depositions_base,
+            params={"access_token": self.zenodo.access_token},
+            timeout=5,
+        )
         self.assertEqual(200, r.status_code, msg=r.text)
 
     def test_create(self):
@@ -80,7 +86,9 @@ class TestLifecycle(unittest.TestCase):
             keywords=["key1", "key2", "key3"],
             notes="this is important",
         )
-        self.assertIsNotNone(data.version, msg="When not given, version should be set to today's date")
+        self.assertIsNotNone(
+            data.version, msg="When not given, version should be set to today's date"
+        )
 
         res = self.zenodo.ensure(key=self.key, data=data, paths=self.path)
         res_json = res.json()
@@ -97,8 +105,13 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.license, res_json["metadata"]["license"])
         self.assertEqual(data.publication_type, res_json["metadata"]["publication_type"])
         # FIXME bug in new zenodo - communities are not returned by creation endpoint
-        # self.assertIn("communities", res_json["metadata"], msg=f"\nKeys: {set(res_json['metadata'])}")
-        # self.assertEqual({"zenodo", "bioinformatics"}, {c["identifier"] for c in res_json["metadata"]["communities"]})
+        # self.assertIn(
+        #     "communities", res_json["metadata"], msg=f"\nKeys: {set(res_json['metadata'])}"
+        # )
+        # self.assertEqual(
+        #     {"zenodo", "bioinformatics"},
+        #     {c["identifier"] for c in res_json["metadata"]["communities"]},
+        # )
         self.assertEqual(data.keywords, res_json["metadata"]["keywords"])
         self.assertEqual(data.notes, res_json["metadata"]["notes"])
 
@@ -168,12 +181,16 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(0, len(res_create_json["files"]))
 
         path = self.directory.joinpath("doi.txt")
-        path.write_text("this record will have DOI %s" % res_create_json["metadata"]["prereserve_doi"]["doi"])
+        path.write_text(
+            "this record will have DOI {}".format(
+                res_create_json["metadata"]["prereserve_doi"]["doi"]
+            )
+        )
 
         res = self.zenodo.update(deposition_id, paths=[path], publish=False)
         res_update_json = res.json()
 
-        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa:S324,S303
+        path_hash = hashlib.md5(path.read_bytes()).hexdigest()  # noqa: S324
         self.assertEqual(path_hash, res_update_json["files"][0]["checksum"])
         self.assertEqual(deposition_id, res_update_json["id"])
 

@@ -1,0 +1,4 @@
+# see https://docs.codecov.com/v4.6/docs/codecov-yaml
+ignore:
+  - "src/zenodo_client/__main__.py"
+  - "src/zenodo_client/cli.py"
