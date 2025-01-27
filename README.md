@@ -35,12 +35,14 @@ A wrapper for the Zenodo API
 
 ## 💪 Getting Started
 
-The first example shows how you can set some configuration then never worry about whether it's been
-uploaded already or not - all baked in with [`pystow`](https://github.com/cthoyt/pystow). On the
-first time this script is run, the new deposition is made, published, and the identifier is stored
-with the given key in your `~/.config/zenodo.ini`. Next time it's run, the deposition will be looked
-up, and the data will be uploaded. Versioning is given automatically by date, and if multiple
-versions are uploaded on one day, then a dash and the revision are appended.
+The first example shows how you can set some configuration then never worry
+about whether it's been uploaded already or not - all baked in with
+[`pystow`](https://github.com/cthoyt/pystow). On the first time this script is
+run, the new deposition is made, published, and the identifier is stored with
+the given key in your `~/.config/zenodo.ini`. Next time it's run, the deposition
+will be looked up, and the data will be uploaded. Versioning is given
+automatically by date, and if multiple versions are uploaded on one day, then a
+dash and the revision are appended.
 
 ```python
 from zenodo_client import Creator, Metadata, ensure_zenodo
@@ -74,8 +76,8 @@ pprint(res.json())
 
 A real-world example can be found here: https://github.com/cthoyt/nsockg.
 
-The following example shows how to use the Zenodo uploader if you already know what your deposition
-identifier is.
+The following example shows how to use the Zenodo uploader if you already know
+what your deposition identifier is.
 
 ```python
 from zenodo_client import update_zenodo
@@ -105,8 +107,9 @@ OOH_NA_NA_RECORD = '4020486'
 new_record = zenodo.get_latest_record(OOH_NA_NA_RECORD)
 ```
 
-Even further, the latest version of `names.tsv.gz` can be automatically downloaded to the
-`~/.data/zenodo/<conceptrecid>/<version>/<path>` via `pystow` with:
+Even further, the latest version of `names.tsv.gz` can be automatically
+downloaded to the `~/.data/zenodo/<conceptrecid>/<version>/<path>` via `pystow`
+with:
 
 ```python
 from zenodo_client import Zenodo
@@ -116,15 +119,17 @@ OOH_NA_NA_RECORD = '4020486'
 new_record = zenodo.download_latest(OOH_NA_NA_RECORD, 'names.tsv.gz')
 ```
 
-A real-world example can be found [here](https://github.com/pyobo/pyobo/blob/master/src/pyobo/resource_utils.py)
-where the latest build of the [Ooh Na Na](https://cthoyt.com/2020/04/18/ooh-na-na.html) nomenclature
-database is automatically downloaded from Zenodo, even though the PyOBO package only hardcodes the
-first deposition ID.
+A real-world example can be found
+[here](https://github.com/pyobo/pyobo/blob/master/src/pyobo/resource_utils.py)
+where the latest build of the
+[Ooh Na Na](https://cthoyt.com/2020/04/18/ooh-na-na.html) nomenclature database
+is automatically downloaded from Zenodo, even though the PyOBO package only
+hardcodes the first deposition ID.
 
 ### Command Line Interface
 
-The zenodo_client command line tool is automatically installed.
-It can be used from the console with the `--help` flag to show all subcommands:
+The zenodo_client command line tool is automatically installed. It can be used
+from the console with the `--help` flag to show all subcommands:
 
 ```console
 $ zenodo_client --help
@@ -253,9 +258,8 @@ More info on Cruft's update command is available
 ### 🥼 Testing
 
 After cloning the repository and installing `tox` with
-`uv tool install tox --with tox-uv` or
-`python3 -m pip install tox tox-uv`, the unit tests in the `tests/` folder
-can be run reproducibly with:
+`uv tool install tox --with tox-uv` or `python3 -m pip install tox tox-uv`, the
+unit tests in the `tests/` folder can be run reproducibly with:
 
 ```console
 $ tox -e py
@@ -318,8 +322,8 @@ to each release of your package.
 
 After these steps, you're ready to go! After you make "release" on GitHub (steps
 for this are below), you can navigate to
-https://zenodo.org/account/settings/github/repository/cthoyt/zenodo-client
-to see the DOI for the release and link to the Zenodo record for it.
+https://zenodo.org/account/settings/github/repository/cthoyt/zenodo-client to
+see the DOI for the release and link to the Zenodo record for it.
 
 #### Registering with the Python Package Index (PyPI)
 
@@ -351,9 +355,9 @@ Note that this deprecates previous workflows using `.pypirc`.
 
 #### Uploading to PyPI
 
-After installing the package in development mode and installing
-`tox` with `uv tool install tox --with tox-uv` or
-`python3 -m pip install tox tox-uv`, run the following from the console:
+After installing the package in development mode and installing `tox` with
+`uv tool install tox --with tox-uv` or `python3 -m pip install tox tox-uv`, run
+the following from the console:
 
 ```console
 $ tox -e finish
@@ -376,9 +380,8 @@ This script does the following:
 
 #### Releasing on GitHub
 
-1. Navigate to
-   https://github.com/cthoyt/zenodo-client/releases/new
-   to draft a new release
+1. Navigate to https://github.com/cthoyt/zenodo-client/releases/new to draft a
+   new release
 2. Click the "Choose a Tag" dropdown and select the tag corresponding to the
    release you just made
 3. Click the "Generate Release Notes" button to get a quick outline of recent
