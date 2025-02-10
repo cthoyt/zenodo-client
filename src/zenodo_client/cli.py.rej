@@ -1,0 +1,20 @@
+diff a/src/zenodo_client/cli.py b/src/zenodo_client/cli.py	(rejected hunks)
+@@ -1,17 +1,4 @@
+-"""Command line interface for :mod:`zenodo_client`.
+-
+-Why does this file exist, and why not put this in ``__main__``?
+-You might be tempted to import things from ``__main__``
+-later, but that will cause problems--the code will get executed twice:
+-
+-- When you run ``python3 -m zenodo_client`` python will
+-  execute``__main__.py`` as a script. That means there won't be any
+-  ``zenodo_client.__main__`` in ``sys.modules``.
+-- When you import __main__ it will get executed again (as a module) because
+-  there's no ``zenodo_client.__main__`` in ``sys.modules``.
+-
+-.. seealso:: https://click.palletsprojects.com/en/8.1.x/setuptools/#setuptools-integration
+-"""
++"""Command line interface for :mod:`zenodo_client`."""
+ 
+ import click
+ 
