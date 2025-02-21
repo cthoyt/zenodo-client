@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/cthoyt/cookiecutter-snekpack",
-  "commit": "3257f18b9b5dc6922830dea64f9e0ab8b42a40e4",
+  "commit": "c180948ff00b5aef1f8d1ace373cc7af66f8491c",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -15,6 +15,7 @@
       "command_line_interface": true,
       "gitlab": false,
       "runner": "tox",
+      "__not_charlie": "",
       "__runner": "tox -e",
       "__runner_uv": "--with tox-uv tox -e",
       "__runner_pip": "tox tox-uv",
@@ -23,7 +24,7 @@
       "__runner_tests": "py",
       "__gh_slug": "cthoyt/zenodo-client",
       "_template": "https://github.com/cthoyt/cookiecutter-snekpack",
-      "_commit": "3257f18b9b5dc6922830dea64f9e0ab8b42a40e4"
+      "_commit": "c180948ff00b5aef1f8d1ace373cc7af66f8491c"
     }
   },
   "directory": null
