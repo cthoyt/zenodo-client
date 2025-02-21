@@ -1,6 +1,8 @@
 Usage
 =====
-This example from PyOBO shows how to update a given deposition (the Zenodo word for a record):
+
+This example from PyOBO shows how to update a given deposition (the Zenodo word for a
+record):
 
 .. code-block::
 
@@ -23,13 +25,21 @@ This example from PyOBO shows how to update a given deposition (the Zenodo word 
 
 Manually controlling publication of a record
 --------------------------------------------
-The following example creates a new deposit for a record and uses the pre-reserved
-DOI before uploading files but does not publish the record, allowing manual editing in the Zenodo UI.
+
+The following example creates a new deposit for a record and uses the pre-reserved DOI
+before uploading files but does not publish the record, allowing manual editing in the
+Zenodo UI.
 
 .. code-block:: python
 
     from pathlib import Path
-    from zenodo_client import Creator, Metadata, create_zenodo, update_zenodo, publish_zenodo
+    from zenodo_client import (
+        Creator,
+        Metadata,
+        create_zenodo,
+        update_zenodo,
+        publish_zenodo,
+    )
 
     HERE = Path(__file__).parent.resolve()
 
@@ -51,7 +61,9 @@ DOI before uploading files but does not publish the record, allowing manual edit
     expected_doi = res.json()["metadata"]["prereserve_doi"]["doi"]
 
     path = HERE / "file.txt"
-    path.write_text(expected_doi)  # this can be any text, we're just using the DOI as an example
+    path.write_text(
+        expected_doi
+    )  # this can be any text, we're just using the DOI as an example
 
     # Add files
     res = update_zenodo(deposition_id=res.json()["id"], paths=[path], publish=False)
