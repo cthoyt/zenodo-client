@@ -31,7 +31,7 @@
         <img src="https://zenodo.org/badge/343513445.svg" alt="DOI"></a>
 </p>
 
-A wrapper for the Zenodo API
+A wrapper for the Zenodo API.
 
 ## 💪 Getting Started
 
@@ -128,7 +128,7 @@ hardcodes the first deposition ID.
 
 ### Command Line Interface
 
-The zenodo_client command line tool is automatically installed. It can be used
+The `zenodo_client` command line tool is automatically installed. It can be used
 from the console with the `--help` flag to show all subcommands:
 
 ```console
