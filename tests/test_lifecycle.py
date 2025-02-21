@@ -31,7 +31,7 @@ CREATOR = Creator(
 class TestStruct(unittest.TestCase):
     """Tests for data structures."""
 
-    def test_name(self):
+    def test_name(self) -> None:
         """Test name errors."""
         with self.assertRaises(ValueError):
             Creator(name="Charles Tapley Hoyt")
@@ -59,7 +59,7 @@ class TestLifecycle(unittest.TestCase):
         """Tear down the test case."""
         self._directory.cleanup()
 
-    def test_connect(self):
+    def test_connect(self) -> None:
         """Test connection works."""
         r = requests.get(
             self.zenodo.depositions_base,
@@ -68,7 +68,7 @@ class TestLifecycle(unittest.TestCase):
         )
         self.assertEqual(200, r.status_code, msg=r.text)
 
-    def test_create(self):
+    def test_create(self) -> None:
         """Test creating a record."""
         data = Metadata(
             title="Test Upload",
@@ -134,7 +134,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertNotEqual(deposition_v2_id, res_v3_json["id"])
         self.assertEqual(f"{data.version}-2", res_v3_json["metadata"]["version"])
 
-    def test_create_no_orcid(self):
+    def test_create_no_orcid(self) -> None:
         """Test create with no ORCID."""
         data = Metadata(
             title="Test Upload",
@@ -157,7 +157,7 @@ class TestLifecycle(unittest.TestCase):
         self.assertEqual(data.title, res_json["metadata"]["title"])
         self.assertEqual(data.version, res_json["metadata"]["version"])
 
-    def test_create_without_publish(self):
+    def test_create_without_publish(self) -> None:
         """Test create without publishing."""
         data = Metadata(
             title="Test Upload",
