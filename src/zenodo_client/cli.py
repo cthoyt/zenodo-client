@@ -33,7 +33,7 @@ def download(deposition: str, path: str, force: bool, latest: bool) -> None:
 @main.command()
 @click.argument("deposition")
 @click.argument("paths", nargs=-1)
-@verbose_option  # type:ignore[misc]
+@verbose_option
 @click.version_option()
 def update(deposition: str, paths: list[str]) -> None:
     """Update the record and given files."""
