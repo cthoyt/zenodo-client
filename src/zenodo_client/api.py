@@ -348,6 +348,7 @@ class Zenodo:
 
         :param record_id: The identifier of the Zenodo record.
         :param authenticate: Whether to use an access token for authentication
+
         :returns: The response JSON from the Zenodo API
         """
         params = {}
@@ -366,6 +367,7 @@ class Zenodo:
 
         :param record_id: The identifier of the Zenodo record.
         :param authenticate: Whether to use an access token for authentication
+
         :returns: The ID of the latest record related to the given one
         """
         res_json = self.get_record(record_id, authenticate=authenticate).json()

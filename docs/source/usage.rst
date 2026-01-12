@@ -1,5 +1,6 @@
-Usage
-=====
+#######
+ Usage
+#######
 
 This example from PyOBO shows how to update a given deposition (the Zenodo word for a
 record):
@@ -23,8 +24,9 @@ record):
     # Magically upload data to this record
     zenodo.update(SANDBOX_DEP_ID, paths)
 
-Manually controlling publication of a record
---------------------------------------------
+**********************************************
+ Manually controlling publication of a record
+**********************************************
 
 The following example creates a new deposit for a record and uses the pre-reserved DOI
 before uploading files but does not publish the record, allowing manual editing in the

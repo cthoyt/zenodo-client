@@ -1,5 +1,6 @@
-Zenodo Client |release| Documentation
-=====================================
+#######################################
+ Zenodo Client |release| Documentation
+#######################################
 
 .. toctree::
     :maxdepth: 2
@@ -10,8 +11,9 @@ Zenodo Client |release| Documentation
     usage
     cli
 
-Indices and Tables
-------------------
+********************
+ Indices and Tables
+********************
 
 - :ref:`genindex`
 - :ref:`modindex`

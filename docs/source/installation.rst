@@ -1,5 +1,6 @@
-Installation
-============
+##############
+ Installation
+##############
 
 The most recent release can be installed from `PyPI
 <https://pypi.org/project/zenodo_client>`_ with uv:
@@ -14,8 +15,9 @@ or with pip:
 
     $ python3 -m pip install zenodo_client
 
-Installing from git
--------------------
+*********************
+ Installing from git
+*********************
 
 The most recent code and data can be installed directly from GitHub with uv:
 
@@ -34,8 +36,9 @@ or with pip:
     The ``UV_PREVIEW`` environment variable is required to be set until the uv build
     backend becomes a stable feature.
 
-Installing for development
---------------------------
+****************************
+ Installing for development
+****************************
 
 To install in development mode with uv:
 

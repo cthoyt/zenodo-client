@@ -1,5 +1,6 @@
-Command Line Interface
-======================
+########################
+ Command Line Interface
+########################
 
 zenodo_client automatically installs the command ``zenodo_client``. See ``zenodo_client
 --help`` for usage details.
