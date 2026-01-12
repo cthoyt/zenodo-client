@@ -25,12 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.13", "3.10" ]
+        python-version: [ "3.14", "3.10" ]
         tox-command: [ "lint", "pyroma", "mypy" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -48,29 +48,25 @@ jobs:
         # We only test documentation on the latest version
         # sphinx 8.0 / sphinx-rtd-theme 3.0 discontinued Python 3.9 support
         # a year early, which prompted re-thinking about this.
-        python-version: [ "3.13" ]
+        python-version: [ "3.14" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
       - name: Install dependencies
         run: |
           sudo apt-get install graphviz
-      - name: Check RST conformity with doc8
-        run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e doc8
+      - name: Lint documentation
+        run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docs-lint
       - name: Check docstring coverage
         run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docstr-coverage
       - name: Check documentation build with Sphinx
         run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e docs-test
-
-      # Check all markdown files are properly formatted
-      # inspired by https://github.com/astral-sh/uv/blob/98523e2014e9a5c69706623344026d76296e178f/.github/workflows/ci.yml#L67C1-L70C61
-      - name: Check markdown formatting
-        run: |
-          npx --yes prettier --prose-wrap always --check "**/*.md"
+      - name: Lint markdown
+        run: uvx -p ${{ matrix.python-version }} --with tox-uv tox -e lint-markdown
 
   tests:
     name: Tests
@@ -80,11 +76,11 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ "3.13", "3.10" ]
+        python-version: [ "3.14", "3.10" ]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: "Install uv"
-        uses: "astral-sh/setup-uv@v3"
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -97,7 +93,7 @@ jobs:
         run:
           uvx -p ${{ matrix.python-version }} --with tox-uv tox -e doctests
       - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         if: success()
         with:
           file: coverage.xml
