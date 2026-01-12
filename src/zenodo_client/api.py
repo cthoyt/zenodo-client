@@ -343,19 +343,32 @@ class Zenodo:
             rv.append(res)
         return rv
 
-    def get_record(self, record_id: int | str) -> requests.Response:
-        """Get the metadata for a given record."""
+    def get_record(self, record_id: int | str, *, authenticate: bool = True) -> requests.Response:
+        """Get the metadata for a given record.
+
+        :param record_id: The identifier of the Zenodo record.
+        :param authenticate: Whether to use an access token for authentication
+        :returns: The response JSON from the Zenodo API
+        """
+        params = {}
+        if authenticate:
+            params["access_token"] = self.access_token
         res = requests.get(
             f"{self.api_base}/records/{record_id}",
-            params={"access_token": self.access_token},
+            params=params,
             timeout=5,
         )
         res.raise_for_status()
         return res
 
-    def get_latest_record(self, record_id: int | str) -> str:
-        """Get the latest record related to the given record."""
-        res_json = self.get_record(record_id).json()
+    def get_latest_record(self, record_id: int | str, *, authenticate: bool = True) -> str:
+        """Get the latest record related to the given record.
+
+        :param record_id: The identifier of the Zenodo record.
+        :param authenticate: Whether to use an access token for authentication
+        :returns: The ID of the latest record related to the given one
+        """
+        res_json = self.get_record(record_id, authenticate=authenticate).json()
         # Still works even in the case that the given record ID is the latest.
         latest = cast(str, res_json["links"]["latest"].split("/")[-3])
         logger.debug("latest for zenodo.record:%s is zenodo.record:%s", record_id, latest)
