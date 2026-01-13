@@ -14,6 +14,7 @@ import pystow
 import requests
 
 from .struct import Metadata
+from .version import get_version
 
 __all__ = [
     "Zenodo",
@@ -34,6 +35,12 @@ PartsHint: TypeAlias = None | Sequence[str] | PartsFunc
 Paths: TypeAlias = str | Path | Iterable[str] | Iterable[Path]
 
 TimeoutHint: TypeAlias = int | float
+
+USER_AGENT_NAME = "zenodo-client-python"
+USER_AGENT = f"{USER_AGENT_NAME} v{get_version()}"
+HEADERS = {
+    "User-Agent": USER_AGENT,
+}
 
 
 def ensure_zenodo(key: str, data: Data, paths: Paths, **kwargs: Any) -> requests.Response:
@@ -150,6 +157,7 @@ class Zenodo:
             json=data,
             params={"access_token": self.access_token},
             timeout=15,
+            headers=HEADERS,
         )
         if res.status_code == 400:
             raise ValueError(res.text)
@@ -236,6 +244,7 @@ class Zenodo:
             f"{self.depositions_base}/{deposition_id}/actions/{action}",
             params={"access_token": self.access_token},
             timeout=15,
+            headers=HEADERS,
         )
         res.raise_for_status()
         return res
@@ -243,7 +252,9 @@ class Zenodo:
     def _get_deposition(self, deposition_id: str) -> requests.Response:
         """Get the metadata for a deposition."""
         url = f"{self.depositions_base}/{deposition_id}"
-        res = requests.get(url, params={"access_token": self.access_token}, timeout=5)
+        res = requests.get(
+            url, params={"access_token": self.access_token}, timeout=5, headers=HEADERS
+        )
         res.raise_for_status()
         return res
 
@@ -303,6 +314,7 @@ class Zenodo:
             f"{self.depositions_base}/{new_deposition_id}",
             params={"access_token": self.access_token},
             timeout=15,
+            headers=HEADERS,
         )
         res.raise_for_status()
         new_deposition_data = res.json()
@@ -319,6 +331,7 @@ class Zenodo:
             json={"metadata": new_deposition_data["metadata"]},
             params={"access_token": self.access_token},
             timeout=15,
+            headers=HEADERS,
         )
         res.raise_for_status()
 
@@ -358,6 +371,7 @@ class Zenodo:
             f"{self.api_base}/records/{record_id}",
             params=params,
             timeout=5,
+            headers=HEADERS,
         )
         res.raise_for_status()
         return res
