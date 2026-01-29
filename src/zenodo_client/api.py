@@ -487,7 +487,7 @@ class Zenodo:
                 return pystow.ensure(*parts, name=name_url[0], url=name_url[1], force=force)
 
             if concurrent:
-                return thread_map(_func, name_url_pairs)
+                return thread_map(_func, name_url_pairs)  # type:ignore
             else:
                 return list(tmap(_func, name_url_pairs))
 
