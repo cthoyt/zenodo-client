@@ -8,10 +8,12 @@ import os
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal, TypeAlias, cast
+from typing import Any, Literal, TypeAlias, cast, overload
 
 import pystow
 import requests
+from tqdm.contrib import tmap
+from tqdm.contrib.concurrent import thread_map
 
 from .struct import Metadata
 from .version import get_version
@@ -19,6 +21,7 @@ from .version import get_version
 __all__ = [
     "Zenodo",
     "create_zenodo",
+    "download_all_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
     "ensure_zenodo",
@@ -68,8 +71,13 @@ def publish_zenodo(deposition_id: str, *, sleep: bool = True, **kwargs: Any) -> 
 
 
 def download_zenodo(deposition_id: str, name: str, force: bool = False, **kwargs: Any) -> Path:
-    """Download a Zenodo record."""
+    """Download a file from a Zenodo record."""
     return Zenodo(**kwargs).download(deposition_id, name=name, force=force)
+
+
+def download_all_zenodo(deposition_id: str, force: bool = False, **kwargs: Any) -> list[Path]:
+    """Download all files from a Zenodo record."""
+    return Zenodo(**kwargs).download_all(deposition_id, force=force)
 
 
 def download_zenodo_latest(
@@ -429,6 +437,34 @@ class Zenodo:
         "concept record ID" as a submodule since that is the consistent identifier
         between different records that are versions of the same data.
         """
+        return self._download_helper(record_id, name=name, force=force, parts=parts)
+
+    def download_all(
+        self, record_id: int | str, *, force: bool = False, parts: PartsHint = None
+    ) -> list[Path]:
+        """Download all files for the given record."""
+        return self._download_helper(record_id, name=None, force=force, parts=parts)
+
+    @overload
+    def _download_helper(
+        self, record_id: int | str, *, name: str = ..., force: bool = ..., parts: PartsHint = ...
+    ) -> Path: ...
+
+    @overload
+    def _download_helper(
+        self, record_id: int | str, *, name: None = ..., force: bool = ..., parts: PartsHint = ...
+    ) -> list[Path]: ...
+
+    def _download_helper(
+        self,
+        record_id: int | str,
+        *,
+        name: str | None = None,
+        force: bool = False,
+        parts: PartsHint = None,
+        concurrent: bool = True,
+    ) -> Path | list[Path]:
+        """Download all files from a given record."""
         res_json = self.get_record(record_id).json()
         # conceptrecid is the consistent record ID for all versions of the same record
         concept_record_id = res_json["conceptrecid"]
@@ -436,20 +472,36 @@ class Zenodo:
         version = res_json["metadata"].get("version", "v1")
         logger.debug("version for zenodo.record:%s is %s", record_id, version)
 
-        for file in res_json["files"]:
-            if file["key"] == name:
-                url = file["links"]["self"]
-                break
-        else:
-            raise FileNotFoundError(
-                f"zenodo.record:{record_id} does not have a file with key {name}"
-            )
-
         if parts is None:
             parts = [self.module.replace(":", "-"), concept_record_id, version]
         elif callable(parts):
             parts = parts(concept_record_id, str(record_id), version)
-        return pystow.ensure(*parts, name=name, url=url, force=force)
+
+        name_url_pairs: list[tuple[str, str]] = [
+            (file["key"], file["links"]["self"]) for file in res_json["files"]
+        ]
+
+        if name is None:
+
+            def _func(name_url: tuple[str, str]) -> Path:
+                return pystow.ensure(*parts, name=name_url[0], url=name_url[1], force=force)
+
+            if concurrent:
+                return thread_map(_func, name_url_pairs)  # type:ignore
+            else:
+                return list(tmap(_func, name_url_pairs))
+
+        rv = [
+            pystow.ensure(*parts, name=n, url=url, force=force)
+            for n, url in name_url_pairs
+            if n == name
+        ]
+        if not rv:
+            raise FileNotFoundError(
+                f"zenodo.record:{record_id} does not have a file with key {name}"
+            )
+
+        return rv[0]
 
     def download_latest(
         self,

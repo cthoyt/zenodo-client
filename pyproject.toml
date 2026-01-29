@@ -56,6 +56,7 @@ dependencies = [
     "click",
     "more_click",
     "typing-extensions",
+    "tqdm",
 ]
 
 # see https://peps.python.org/pep-0735/ and https://docs.astral.sh/uv/concepts/dependencies/#dependency-groups
