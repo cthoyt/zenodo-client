@@ -5,7 +5,9 @@ from .api import (
     create_zenodo,
     download_zenodo,
     download_zenodo_latest,
+    ensure_files,
     ensure_zenodo,
+    list_files,
     publish_zenodo,
     update_zenodo,
 )
@@ -31,7 +33,9 @@ __all__ = [
     "create_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
+    "ensure_files",
     "ensure_zenodo",
+    "list_files",
     "publish_zenodo",
     "update_zenodo",
 ]

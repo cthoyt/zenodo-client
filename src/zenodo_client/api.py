@@ -12,6 +12,8 @@ from typing import Any, Literal, TypeAlias, cast
 
 import pystow
 import requests
+from tqdm.contrib import tmap
+from tqdm.contrib.concurrent import thread_map
 
 from .struct import Metadata
 from .version import get_version
@@ -21,7 +23,9 @@ __all__ = [
     "create_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
+    "ensure_files",
     "ensure_zenodo",
+    "list_files",
     "publish_zenodo",
     "update_zenodo",
 ]
@@ -77,6 +81,23 @@ def download_zenodo_latest(
 ) -> Path:
     """Download the latest Zenodo record."""
     return Zenodo(**kwargs).download_latest(deposition_id, name=path, force=force)
+
+
+def list_files(deposition_id: str) -> list[str]:
+    pass
+
+
+def ensure_files(deposition_id: str, *, concurrent: bool = True) -> list[Path]:
+    """Ensure all files for a record."""
+    files = list_files(deposition_id)
+
+    def _func(name: str) -> Path:
+        return download_zenodo(deposition_id, name)
+
+    if concurrent:
+        return thread_map(_func, files)
+    else:
+        return list(tmap(_func, files))
 
 
 class Zenodo:
