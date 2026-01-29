@@ -3,11 +3,10 @@
 from .api import (
     Zenodo,
     create_zenodo,
+    download_all_zenodo,
     download_zenodo,
     download_zenodo_latest,
-    ensure_files,
     ensure_zenodo,
-    list_files,
     publish_zenodo,
     update_zenodo,
 )
@@ -31,11 +30,10 @@ __all__ = [
     "UploadType",
     "Zenodo",
     "create_zenodo",
+    "download_all_zenodo",
     "download_zenodo",
     "download_zenodo_latest",
-    "ensure_files",
     "ensure_zenodo",
-    "list_files",
     "publish_zenodo",
     "update_zenodo",
 ]
