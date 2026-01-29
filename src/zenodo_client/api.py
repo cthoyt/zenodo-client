@@ -492,9 +492,9 @@ class Zenodo:
                 return list(tmap(_func, name_url_pairs))
 
         rv = [
-            pystow.ensure(*parts, name=file["key"], url=file["links"]["self"], force=force)
-            for file in res_json["files"]
-            if file["key"] == name
+            pystow.ensure(*parts, name=n, url=url, force=force)
+            for n, url in name_url_pairs
+            if n == name
         ]
         if not rv:
             raise FileNotFoundError(
