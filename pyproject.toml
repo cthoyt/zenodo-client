@@ -97,19 +97,6 @@ pyroma = [
     "pyroma",
     "pygments",
 ]
-# follow https://github.com/astral-sh/uv/issues/6298 for switching to a uv-based version bump workflow
-bump = [
-    "bump-my-version",
-]
-build = [
-    "uv>=0.9.6",
-    "uv-build>=0.9.6",
-]
-release = [
-    { include-group = "build" },
-    "uv",
-    "keyring",
-]
 
 # see https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#dependencies-optional-dependencies
 [project.optional-dependencies]

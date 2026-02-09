@@ -60,11 +60,11 @@ pyroma:
 
 [doc("run static type checking with mypy")]
 mypy:
-    uv run --group typing mypy --ignore-missing-imports --strict src/ tests/
+    uv run --group typing --all-extras mypy --ignore-missing-imports --strict src/ tests/
 
 [doc("run static type checking with ty")]
 ty:
-    uv run --group typing ty check src/ tests/
+    uv run --group typing --all-extras ty check src/ tests/
 
 [doc("run the doc8 tool to check the style of the RST files in the project docs")]
 docs-lint:
@@ -101,4 +101,32 @@ bumpversion-release:
 
 [doc("build an sdist and wheel")]
 build:
-    uv build --sdist --wheel --no-build-isolation --clear
+    uv build --sdist --wheel --clear
+
+[doc("Release the code to PyPI so users can pip install it, using credentials from keyring")]
+release:
+    just build
+    uv tool install --quiet keyring
+    uv publish --username __token__ --keyring-provider subprocess --publish-url https://upload.pypi.org/legacy/
+
+[doc("Run a workflow that removes -dev from the version, creates a tagged release on GitHub, creates a release on PyPI, and bumps the version again.")]
+finish:
+    just bumpversion-release
+    just release
+    git push --tags
+    uvx bump-my-version bump patch
+    git push
+
+[doc("Release the code to the test PyPI site")]
+test-release:
+    just build
+    uv tool install --quiet keyring
+    uv publish --username __token__ --keyring-provider subprocess --publish-url https://test.pypi.org/legacy/
+
+[doc("Run a workflow that removes -dev from the version, creates a tagged release on GitHub, creates a release on Test PyPI, and bumps the version again.")]
+test-finish:
+    just bumpversion-release
+    just test-release
+    git push --tags
+    uvx bump-my-version bump patch
+    git push
