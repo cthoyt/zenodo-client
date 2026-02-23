@@ -60,11 +60,11 @@ pyroma:
 
 [doc("run static type checking with mypy")]
 mypy:
-    uv run --group typing mypy --ignore-missing-imports --strict src/ tests/
+    uv run --group typing --all-extras mypy --ignore-missing-imports --strict src/ tests/
 
 [doc("run static type checking with ty")]
 ty:
-    uv run --group typing ty check src/ tests/
+    uv run --group typing --all-extras ty check src/ tests/
 
 [doc("run the doc8 tool to check the style of the RST files in the project docs")]
 docs-lint:
@@ -101,4 +101,67 @@ bumpversion-release:
 
 [doc("build an sdist and wheel")]
 build:
-    uv build --sdist --wheel --no-build-isolation --clear
+    uv build --sdist --wheel --clear
+
+############
+# Releases #
+############
+
+# In order to make a release to PyPI, you'll need to take the following steps:
+#
+# 1. Navigate to https://pypi.org/account/register/ to register for Test PyPI
+# 2. Navigate to https://pypi.org/manage/account/ and request to re-send a verification email.
+#    This is not sent by default, and is required to set up 2-Factor Authentication.
+# 3. Get account recovery codes
+# 4. Set up 2-Factor Authentication
+# 5. Get an API token from https://pypi.org/manage/account/token/
+# 6. Install keyring with `uv tool install keyring`
+# 7. Add your token to keyring with `keyring set https://upload.pypi.org/legacy/ __token__`
+
+[doc("Release the code to PyPI so users can pip install it, using credentials from keyring")]
+release:
+    just build
+    uv tool install --quiet keyring
+    uv publish --username __token__ --keyring-provider subprocess --publish-url https://upload.pypi.org/legacy/
+
+[doc("Release the code to PyPI so users can pip install it, using credentials from the environment.")]
+release-via-env:
+    just build
+    uv publish --publish-url https://upload.pypi.org/legacy/
+
+[doc("Run a workflow that removes -dev from the version, creates a tagged release on GitHub, creates a release on PyPI, and bumps the version again.")]
+finish:
+    just bumpversion-release
+    just release
+    git push --tags
+    uvx bump-my-version bump patch
+    git push
+
+#################
+# Test Releases #
+#################
+
+# In order to test making a release to Test PyPI, you'll need to take the following steps:
+#
+# 1. Navigate to https://test.pypi.org/account/register/ to register for Test PyPI
+# 2. Navigate to https://test.pypi.org/manage/account/ and request to re-send a verification email.
+#    This is not sent by default, and is required to set up 2-Factor Authentication.
+# 3. Get account recovery codes
+# 4. Set up 2-Factor Authentication
+# 5. Get an API token from https://test.pypi.org/manage/account/token/
+# 6. Install keyring with `uv tool install keyring`
+# 7. Add your token to keyring with `keyring set https://test.pypi.org/legacy/ __token__`
+
+[doc("Release the code to the test PyPI site")]
+test-release:
+    just build
+    uv tool install --quiet keyring
+    uv publish --username __token__ --keyring-provider subprocess --publish-url https://test.pypi.org/legacy/
+
+[doc("Run a workflow that removes -dev from the version, creates a tagged release on GitHub, creates a release on Test PyPI, and bumps the version again.")]
+test-finish:
+    just bumpversion-release
+    just test-release
+    git push --tags
+    uvx bump-my-version bump patch
+    git push
