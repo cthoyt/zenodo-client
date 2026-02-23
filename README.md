@@ -377,7 +377,7 @@ $ tox -e finish
 This script does the following:
 
 1. Uses [bump-my-version](https://github.com/callowayproject/bump-my-version) to
-   switch the version number in the `pyproject.toml`, `CITATION.cff`,
+   switch the version number in the `pyproject.toml`,
    `src/zenodo_client/version.py`, and
    [`docs/source/conf.py`](docs/source/conf.py) to not have the `-dev` suffix
 2. Packages the code in both a tar archive and a wheel using

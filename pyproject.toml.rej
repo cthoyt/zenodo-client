@@ -1,0 +1,41 @@
+diff a/pyproject.toml b/pyproject.toml	(rejected hunks)
+@@ -50,10 +50,10 @@ license-files = [
+ 
+ requires-python = ">=3.10"
+ dependencies = [
+-    "more_itertools", # missing from itertools in stdlib
++    "more-itertools", # missing from itertools in stdlib
+     "tqdm", # progress bars
+     "click",
+-    "more_click",
++    "more-click",
+     "typing-extensions",
+ ]
+ 
+@@ -64,7 +64,7 @@ tests = [
+     "coverage[toml]",
+ ]
+ docs = [
+-    "sphinx>=8",
++    "sphinx>=8,<9",
+     "sphinx-rtd-theme>=3.0","sphinx-click", 
+     "sphinx_automodapi",
+     # Include if your project uses Pydantic:
+@@ -80,7 +80,7 @@ typing = [
+     { include-group = "tests" },
+     "mypy",
+     "pydantic",
+-    "click-types",
++    "types-click",
+     # You will probably have to add additional type stubs here, especially if you're using tox-uv
+ ]
+ docs-lint = [
+@@ -271,8 +258,3 @@ replace = "release = \"{new_version}\""
+ filename = "src/zenodo_client/version.py"
+ search = "VERSION = \"{current_version}\""
+ replace = "VERSION = \"{new_version}\""
+-
+-[[tool.bumpversion.files]]
+-filename = "CITATION.cff"
+-search = "version: {current_version}"
+-replace = "version: {new_version}"
